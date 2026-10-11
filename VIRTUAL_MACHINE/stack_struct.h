@@ -1,7 +1,6 @@
 #ifndef _STACK_STRUCT_H_
 #define _STACK_STRUCT_H_
 
-
 #ifdef __win32__
     #define WINDOWS_SYS
 #endif

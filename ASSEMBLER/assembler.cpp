@@ -1,6 +1,5 @@
 #include "assembler.h"
 
-
 int main()
 {
     FileInfo file = {};
