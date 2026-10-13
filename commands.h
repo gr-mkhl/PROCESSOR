@@ -19,7 +19,10 @@ enum commands
     JAE = 12,
     JB = 13,
     JBE = 14,
-    JE = 15
+    JE = 15,
+    JNE = 16,
+    CALL = 17,
+    RET = 18
 };
 
 enum registers

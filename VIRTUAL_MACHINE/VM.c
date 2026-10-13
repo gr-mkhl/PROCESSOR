@@ -1,7 +1,6 @@
 #include "VM.h"
 
 
-
 int main( int argc, char** argv )
 {
     const char* input_filename = NULL;
@@ -13,8 +12,9 @@ int main( int argc, char** argv )
         input_filename = DEFAULT_INPUT_FILENAME;
     }
 
-    processor My = {};
-    StackInit(&My.stack, INIT_SIZE);
+    processor Proc = {};
+    StackInit(&Proc.stack, INIT_SIZE);
+    StackInit(&Proc.ret_stack, INIT_SIZE);
     struct stat input_file = {};
 
     int stat_status = stat(input_filename, &input_file);
@@ -22,106 +22,133 @@ int main( int argc, char** argv )
 
     size_t code_size_int = input_file.st_size / sizeof(int);
 
-    My.code = (int*)calloc(code_size_int, sizeof(int));
+    Proc.code = (int*)calloc(code_size_int, sizeof(int));
 
     FILE* code_file = fopen(input_filename, "rb");
     assert(code_file != NULL);
 
-    fread(My.code, sizeof(int), code_size_int, code_file);
+    fread(Proc.code, sizeof(int), code_size_int, code_file);
 
     fclose(code_file);
 
 
-    while (My.ip < code_size_int)
+    while (Proc.ip < code_size_int)
     {
-        switch(My.code[My.ip++])
+        printf("AX: %d\nBX: %d\n", Proc.reg[0], Proc.reg[1]);
+        switch(Proc.code[Proc.ip++])
         {
             case PUSH:
-                StackPush(&My.stack, My.code[My.ip++]);
+            printf("PUSH\n");
+                StackPush(&Proc.stack, Proc.code[Proc.ip++]);
                 break;
             case PUSHR:
-                StackPush(&My.stack, My.reg[My.code[My.ip++] - 1]);
+            printf("PUSHR\n");
+                StackPush(&Proc.stack, Proc.reg[Proc.code[Proc.ip++] - 1]);
                 break;
             case POP:
-                StackPop(&My.stack, &My.reg[My.code[My.ip++] - 1]);
+            printf("POP\n");
+                StackPop(&Proc.stack, &Proc.reg[Proc.code[Proc.ip++] - 1]);
                 break;
             case ADD:
-                StackPop(&My.stack, &My.value[0]);
-                StackPop(&My.stack, &My.value[1]);
-                StackPush(&My.stack, My.value[0] + My.value[1]);
+            printf("ADD\n");
+                StackPop(&Proc.stack, &Proc.value[0]);
+                StackPop(&Proc.stack, &Proc.value[1]);
+                StackPush(&Proc.stack, Proc.value[0] + Proc.value[1]);
                 break;
             case MUL:
-                StackPop(&My.stack, &My.value[0]);
-                StackPop(&My.stack, &My.value[1]);
-                StackPush(&My.stack, My.value[0] * My.value[1]);
+            printf("MUL\n");
+                StackPop(&Proc.stack, &Proc.value[0]);
+                StackPop(&Proc.stack, &Proc.value[1]);
+                StackPush(&Proc.stack, Proc.value[0] * Proc.value[1]);
                 break;
             case SUB:
-                StackPop(&My.stack, &My.value[0]);
-                StackPop(&My.stack, &My.value[1]);
-                StackPush(&My.stack, My.value[1] - My.value[0]);
+            printf("SUB\n");
+                StackPop(&Proc.stack, &Proc.value[0]);
+                StackPop(&Proc.stack, &Proc.value[1]);
+                StackPush(&Proc.stack, Proc.value[1] - Proc.value[0]);
                 break;
             case DIV:
-                StackPop(&My.stack, &My.value[0]);
-                if (My.value[0] == 0)
+            printf("DIV\n");
+                StackPop(&Proc.stack, &Proc.value[0]);
+                if (Proc.value[0] == 0)
                 {
                     fprintf(stderr, "RUNTIME ERROR: DIVISION BY ZERO");
                     exit(1);
                 }
-                StackPop(&My.stack, &My.value[1]);
-                StackPush(&My.stack, My.value[1] / My.value[0]);
+                StackPop(&Proc.stack, &Proc.value[1]);
+                StackPush(&Proc.stack, Proc.value[1] / Proc.value[0]);
                 break;
             case OUT:
-                StackPop(&My.stack, &My.value[0]);
-                printf("OUTPUT: %d\n", My.value[0]);
+            printf("OUT\n");
+                StackPop(&Proc.stack, &Proc.value[0]);
+                printf("OUTPUT: %d\n", Proc.value[0]);
                 break;
             case IN:
+            printf("IN\n");
                 printf("INPUT: ");
-                scanf("%d", &My.value[0]);
-                StackPush(&My.stack, My.value[0]);
+                scanf("%d", &Proc.value[0]);
+                StackPush(&Proc.stack, Proc.value[0]);
+                break;
+            case CALL:
+            printf("CALL\n");
+                StackPush(&Proc.ret_stack, (int)(Proc.ip + 1));
+                Proc.ip = Proc.code[Proc.ip];
+                break;
+            case RET:
+            printf("RET\n");
+                StackPop(&Proc.ret_stack, &Proc.value[0]);
+                Proc.ip = Proc.value[0];
                 break;
             case JMP:
-                My.ip = My.code[My.ip];
+            printf("JMP\n");
+                Proc.ip = Proc.code[Proc.ip];
                 break;
             case JA:
-                StackPop(&My.stack, &My.value[0]);
-                StackPop(&My.stack, &My.value[1]);
-                if (My.value[1] > My.value[2])
-                    My.ip = My.code[My.ip];
+                StackPop(&Proc.stack, &Proc.value[0]);
+                StackPop(&Proc.stack, &Proc.value[1]);
+                if (Proc.value[1] > Proc.value[2])
+                    Proc.ip = Proc.code[Proc.ip];
                 break;
             case JAE:
-                StackPop(&My.stack, &My.value[0]);
-                StackPop(&My.stack, &My.value[1]);
-                if (My.value[1] >= My.value[2])
-                    My.ip = My.code[My.ip];
+                StackPop(&Proc.stack, &Proc.value[0]);
+                StackPop(&Proc.stack, &Proc.value[1]);
+                if (Proc.value[1] >= Proc.value[2])
+                    Proc.ip = Proc.code[Proc.ip];
                 break;
             case JB:
-                StackPop(&My.stack, &My.value[0]);
-                StackPop(&My.stack, &My.value[1]);
-                if (My.value[1] < My.value[2])
-                    My.ip = My.code[My.ip];
+                StackPop(&Proc.stack, &Proc.value[0]);
+                StackPop(&Proc.stack, &Proc.value[1]);
+                if (Proc.value[1] < Proc.value[2])
+                    Proc.ip = Proc.code[Proc.ip];
                 break;
             case JBE:
-                StackPop(&My.stack, &My.value[0]);
-                StackPop(&My.stack, &My.value[1]);
-                if (My.value[1] <= My.value[2])
-                    My.ip = My.code[My.ip];
+                StackPop(&Proc.stack, &Proc.value[0]);
+                StackPop(&Proc.stack, &Proc.value[1]);
+                if (Proc.value[1] <= Proc.value[2])
+                    Proc.ip = Proc.code[Proc.ip];
                 break;
             case JE:
-                StackPop(&My.stack, &My.value[0]);
-                StackPop(&My.stack, &My.value[1]);
-                if (My.value[1] == My.value[2])
-                    My.ip = My.code[My.ip];
+                StackPop(&Proc.stack, &Proc.value[0]);
+                StackPop(&Proc.stack, &Proc.value[1]);
+                if (Proc.value[1] == Proc.value[2])
+                    Proc.ip = Proc.code[Proc.ip];
                 break;
             case HLT:
-                return 0;
+            printf("HLT\n");
+                StackDtor(&Proc.stack);
+                free(Proc.code);
+                return 0; //это плохо
             default:
                 fprintf(stderr, "RUNTIME ERROR: INCORRECT COMMAND\n");
                 exit(1);
         }
     }
+    if (Proc.ip == code_size_int)
+    {
+        fprintf(stderr, "RUNTIME ERROR: SEGMENTATION FAULT\n");
+        StackDtor(&Proc.stack);
+        free(Proc.code);
+        return 0;
+    }
 
-    StackDtor(&My.stack);
-    free(My.code);
-
-    return 0;
 }

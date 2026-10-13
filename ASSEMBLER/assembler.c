@@ -1,5 +1,7 @@
 #include "assembler.h"
 
+
+
 int main( int argc, char** argv )
 {
     FileInfo file = {};
@@ -21,9 +23,18 @@ int main( int argc, char** argv )
     code_arr CodeArray = {};
     CodeArray.code = (int*)calloc(file.FileSize, sizeof(int));
 
+    /*
     int labels[NUM_OF_LABELS] = {};
     for (size_t i = 0; i < NUM_OF_LABELS; i++)
         labels[i] = -1;
+    */
+
+
+
+    label_t labels[NUM_OF_LABELS] = {};
+    for (size_t i = 0; i < NUM_OF_LABELS; i++)
+        labels[i].label_address = -1;
+
 
     Assembler(file.Index, file.NumStrings, &CodeArray, labels);
 
@@ -31,10 +42,6 @@ int main( int argc, char** argv )
 
     Assembler(file.Index, file.NumStrings, &CodeArray, labels);
 
-    /*
-    for (size_t i = 0; i < CodeArray.size; i++)
-        printf("[%zu] -> %d\n", i, CodeArray.code[i]);
-    */
 
     FILE* output = fopen(output_filename, "wb");
     assert(output != NULL);
@@ -46,7 +53,7 @@ int main( int argc, char** argv )
     return 0;
 }
 
-code_arr* Assembler( char** arr_of_asm_str, size_t num_of_str, code_arr* byte_code, int* labels )
+code_arr* Assembler( char** arr_of_asm_str, size_t num_of_str, code_arr* byte_code, label_t* labels )
 {
     char command_name[10] = {};
     int command_arg = 0;
@@ -60,13 +67,8 @@ code_arr* Assembler( char** arr_of_asm_str, size_t num_of_str, code_arr* byte_co
             {
                 case ':':
                 {
-                    sscanf_rv = sscanf(arr_of_asm_str[i], "%*s %d", &command_arg);
-                    if (sscanf_rv != 1 || command_arg >= NUM_OF_LABELS || command_arg < 0)
-                    {
-                        fprintf(stderr, "ASSEMBLING ERROR: INCORRECT LABEL\n");
-                        exit(1);
-                    }
-                    labels[command_arg] = (int)byte_code->size;
+                    sscanf_rv = sscanf(arr_of_asm_str[i], "%*s %s", command_name);
+                    SetLabel(command_name, (int)byte_code->size, labels);
                     break;
                 }
                 case 'P':
@@ -125,6 +127,32 @@ code_arr* Assembler( char** arr_of_asm_str, size_t num_of_str, code_arr* byte_co
                     }
                     break;
                 }
+                case 'C':
+                {
+                    if (strcmp(command_name, "CALL") == 0)
+                    {
+                        byte_code->code[byte_code->size++] = CALL;
+                        sscanf(arr_of_asm_str[i], "%*s %s", command_name);
+                        if (command_name[0] == ':')
+                        {
+                            sscanf_rv = sscanf(arr_of_asm_str[i], "%*s %*s %s", command_name);
+
+                            int address = FindLabel(command_name, labels);
+                            byte_code->code[byte_code->size++] = address;
+                        }
+                        else
+                        {
+                            fprintf(stderr, "ASSEMBLING ERROR: INCORRECT LABEL\n");
+                            exit(1);
+                        }
+                    }
+                    break;
+                }
+                case 'O':
+                {
+                    byte_code->code[byte_code->size++] = OUT;
+                    break;
+                }
                 case 'A':
                 {
                     byte_code->code[byte_code->size++] = ADD;
@@ -135,9 +163,9 @@ code_arr* Assembler( char** arr_of_asm_str, size_t num_of_str, code_arr* byte_co
                     byte_code->code[byte_code->size++] = MUL;
                     break;
                 }
-                case 'O':
+                case 'R':
                 {
-                    byte_code->code[byte_code->size++] = OUT;
+                    byte_code->code[byte_code->size++] = RET;
                     break;
                 }
                 case 'D':
@@ -174,20 +202,17 @@ code_arr* Assembler( char** arr_of_asm_str, size_t num_of_str, code_arr* byte_co
                         byte_code->code[byte_code->size++] = JBE;
                     else if (strcmp(command_name,  "JE") == 0)
                         byte_code->code[byte_code->size++] = JE;
+                    else if (strcmp(command_name,  "JNE") == 0)
+                        byte_code->code[byte_code->size++] = JNE;
 
                     sscanf(arr_of_asm_str[i], "%*s %s", command_name);
                     if (command_name[0] == ':')
                     {
-                        sscanf_rv = sscanf(arr_of_asm_str[i], "%*s %*s %d", &command_arg);
-                        if (sscanf_rv != 1 || command_arg >= NUM_OF_LABELS || command_arg < 0)
-                        {
-                            fprintf(stderr, "ASSEMBLING ERROR: INCORRECT LABEL\n");
-                            exit(1);
-                        }
-                        byte_code->code[byte_code->size++] = labels[command_arg];
+                        sscanf_rv = sscanf(arr_of_asm_str[i], "%*s %*s %s", command_name);
+
+                        int address = FindLabel(command_name, labels);
+                        byte_code->code[byte_code->size++] = address;
                     }
-                    else if (isdigit(command_name[0]))
-                        byte_code->code[byte_code->size++] = atoi(command_name);
                     else
                     {
                         fprintf(stderr, "ASSEMBLING ERROR: INCORRECT LABEL\n");
@@ -206,3 +231,28 @@ code_arr* Assembler( char** arr_of_asm_str, size_t num_of_str, code_arr* byte_co
     return byte_code;
 }
 
+int FindLabel( const char* name, label_t* labels_arr )
+{
+    for (size_t i = 0; i < NUM_OF_LABELS; i++)
+    {
+        if (strcmp(labels_arr[i].label_name, name) == 0)
+            return labels_arr[i].label_address;
+    }
+
+    return -1;
+}
+
+int SetLabel( const char* name, int address, label_t* labels_arr )
+{
+    for (size_t i = 0; i < NUM_OF_LABELS; i++)
+    {
+        if (strcmp(labels_arr[i].label_name, "") == 0)
+        {
+            strcpy(labels_arr[i].label_name, name);
+            labels_arr[i].label_address = address;
+            return 1;
+        }
+    }
+
+    return 0;
+}

@@ -14,11 +14,12 @@
 struct processor
 {
     stack_t stack;
+    stack_t ret_stack;
     int* code;
     size_t ip;
-    int reg[4];
+    stack_el_t reg[4];
 
-    int value[2];
+    stack_el_t value[2];
 };
 
 #endif
