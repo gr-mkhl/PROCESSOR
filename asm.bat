@@ -11,4 +11,4 @@ g++ -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal ^
 -Wstrict-null-sentinel -Wtype-limits -Wwrite-strings -Werror=vla -D_DEBUG ^
 -D_EJUDGE_CLIENT_SIDE assembler.c file_work.c -o asm_prog.exe
 
-.\asm_prog.exe
+.\asm_prog.exe ../%1

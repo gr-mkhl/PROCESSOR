@@ -8,8 +8,7 @@
 #include "file_work.h"
 #include "../commands.h"
 
-#define INPUT_FILENAME "../code.asm"
-#define OUTPUT_FILENAME "../code.o"
+#define DEFAULT_OUTPUT_FILENAME "../a.o"
 
 #define NUM_OF_LABELS 20
 

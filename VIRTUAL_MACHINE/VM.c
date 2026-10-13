@@ -1,32 +1,36 @@
 #include "VM.h"
 
-struct processor
-{
-    stack_t stack;
-    int* code;
-    size_t ip;
-    int reg[4];
 
-    int value[2];
-};
 
-int main()
+int main( int argc, char** argv )
 {
+    const char* input_filename = NULL;
+
+    if (argc > 1 && strcmp(argv[1], "../") != 0)
+        input_filename = argv[1];
+    else
+    {
+        input_filename = DEFAULT_INPUT_FILENAME;
+    }
+
     processor My = {};
     StackInit(&My.stack, INIT_SIZE);
     struct stat input_file = {};
 
-    int stat_status = stat(INPUT_FILENAME, &input_file);
+    int stat_status = stat(input_filename, &input_file);
     assert(stat_status != -1);
 
     size_t code_size_int = input_file.st_size / sizeof(int);
 
     My.code = (int*)calloc(code_size_int, sizeof(int));
 
-    FILE* code_file = fopen(INPUT_FILENAME, "rb");
+    FILE* code_file = fopen(input_filename, "rb");
     assert(code_file != NULL);
 
     fread(My.code, sizeof(int), code_size_int, code_file);
+
+    fclose(code_file);
+
 
     while (My.ip < code_size_int)
     {
@@ -77,6 +81,36 @@ int main()
                 break;
             case JMP:
                 My.ip = My.code[My.ip];
+                break;
+            case JA:
+                StackPop(&My.stack, &My.value[0]);
+                StackPop(&My.stack, &My.value[1]);
+                if (My.value[1] > My.value[2])
+                    My.ip = My.code[My.ip];
+                break;
+            case JAE:
+                StackPop(&My.stack, &My.value[0]);
+                StackPop(&My.stack, &My.value[1]);
+                if (My.value[1] >= My.value[2])
+                    My.ip = My.code[My.ip];
+                break;
+            case JB:
+                StackPop(&My.stack, &My.value[0]);
+                StackPop(&My.stack, &My.value[1]);
+                if (My.value[1] < My.value[2])
+                    My.ip = My.code[My.ip];
+                break;
+            case JBE:
+                StackPop(&My.stack, &My.value[0]);
+                StackPop(&My.stack, &My.value[1]);
+                if (My.value[1] <= My.value[2])
+                    My.ip = My.code[My.ip];
+                break;
+            case JE:
+                StackPop(&My.stack, &My.value[0]);
+                StackPop(&My.stack, &My.value[1]);
+                if (My.value[1] == My.value[2])
+                    My.ip = My.code[My.ip];
                 break;
             case HLT:
                 return 0;

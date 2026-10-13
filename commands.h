@@ -14,7 +14,12 @@ enum commands
     IN = 7,
     PUSHR = 8,
     POP = 9,
-    JMP = 10
+    JMP = 10,
+    JA = 11,
+    JAE = 12,
+    JB = 13,
+    JBE = 14,
+    JE = 15
 };
 
 enum registers

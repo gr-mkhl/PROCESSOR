@@ -18,7 +18,6 @@ void SetFileName( struct FileInfo* file, const char* filename )
 {
     assert(file);
     assert(filename);
-
     char* set_file_status = strcpy(file->FileName, filename);
     assert(set_file_status);
 

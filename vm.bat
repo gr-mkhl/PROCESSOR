@@ -17,4 +17,4 @@ del /q "%~dp0STACK_ERRORS.log"
 rem
 )
 
-.\vm_prog.exe
+.\vm_prog.exe ../%1

@@ -1,10 +1,22 @@
 #include "assembler.h"
 
-int main()
+int main( int argc, char** argv )
 {
     FileInfo file = {};
 
-    PrepareFileForSorting(INPUT_FILENAME, &file);
+    if (argc > 1 && strcmp(argv[1], "../") != 0)
+        PrepareFileForSorting(argv[1], &file);
+    else
+    {
+        fprintf(stderr, "ASSEMBLING ERROR: YOU NEED TO INPUT FILENAME\n");
+        exit(1);
+    }
+    const char* output_filename = NULL;
+    if (argc > 2 && strcmp(argv[2], "../") != 0)
+        output_filename = argv[2];
+    else
+        output_filename = DEFAULT_OUTPUT_FILENAME;
+
 
     code_arr CodeArray = {};
     CodeArray.code = (int*)calloc(file.FileSize, sizeof(int));
@@ -19,10 +31,12 @@ int main()
 
     Assembler(file.Index, file.NumStrings, &CodeArray, labels);
 
+    /*
     for (size_t i = 0; i < CodeArray.size; i++)
         printf("[%zu] -> %d\n", i, CodeArray.code[i]);
+    */
 
-    FILE* output = fopen(OUTPUT_FILENAME, "wb");
+    FILE* output = fopen(output_filename, "wb");
     assert(output != NULL);
     fwrite(CodeArray.code, sizeof(int), CodeArray.size, output);
 
@@ -148,7 +162,19 @@ code_arr* Assembler( char** arr_of_asm_str, size_t num_of_str, code_arr* byte_co
                 }
                 case 'J':
                 {
-                    byte_code->code[byte_code->size++] = JMP;
+                    if (strcmp(command_name,  "JMP") == 0)
+                        byte_code->code[byte_code->size++] = JMP;
+                    else if (strcmp(command_name,  "JA") == 0)
+                        byte_code->code[byte_code->size++] = JA;
+                    else if (strcmp(command_name,  "JAE") == 0)
+                        byte_code->code[byte_code->size++] = JAE;
+                    else if (strcmp(command_name,  "JB") == 0)
+                        byte_code->code[byte_code->size++] = JB;
+                    else if (strcmp(command_name,  "JBE") == 0)
+                        byte_code->code[byte_code->size++] = JBE;
+                    else if (strcmp(command_name,  "JE") == 0)
+                        byte_code->code[byte_code->size++] = JE;
+
                     sscanf(arr_of_asm_str[i], "%*s %s", command_name);
                     if (command_name[0] == ':')
                     {
