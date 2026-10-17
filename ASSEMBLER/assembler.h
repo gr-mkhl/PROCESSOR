@@ -6,26 +6,38 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdint.h>
-#include "file_work.h"
+#include "FILE_WORK/file_work.h"
 #include "../commands.h"
 
 #define DEFAULT_OUTPUT_FILENAME "../a.o"
 
 #define NUM_OF_LABELS 20
 
-struct code_arr
+struct bytecode_t
 {
-    int* code;
+    int* code_array;
     size_t size;
 };
 
 struct label_t
 {
-    char label_name[20];
+    char label_name[50];
     int label_address;
 };
 
-code_arr* Assembler( char** arr_of_asm_str, size_t num_of_str, code_arr* byte_code, label_t* labels );
+struct asm_t
+{
+    bytecode_t bytecode;
+    label_t* labels;
+    char** array_of_lines;
+    char* buffer_ptr;
+    size_t num_of_lines;
+};
+
+void PreAssembling( int argc, char** argv, asm_t* asm_data );
+void Assembler(asm_t* asm_data);
+void DoubleAssembling( asm_t* asm_data );
+void PostAssembling( int argc, char** argv, asm_t* asm_data );
 int FindLabel( const char* name, label_t* labels_arr );
 int SetLabel( const char* name, int address, label_t* labels_arr );
 

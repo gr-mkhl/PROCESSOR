@@ -4,34 +4,38 @@
 
 enum commands
 {
-    HLT = 0,
-    PUSH = 1,
-    ADD = 2,
-    SUB = 3,
-    MUL = 4,
-    DIV = 5,
-    OUT = 6,
-    IN = 7,
+    HLT   = 0,
+    PUSH  = 1,
+    ADD   = 2,
+    SUB   = 3,
+    MUL   = 4,
+    DIV   = 5,
+    OUT   = 6,
+    IN    = 7,
     PUSHR = 8,
-    POP = 9,
-    JMP = 10,
-    JA = 11,
-    JAE = 12,
-    JB = 13,
-    JBE = 14,
-    JE = 15,
-    JNE = 16,
-    CALL = 17,
-    RET = 18
+    POP   = 9,
+    JMP   = 10,
+    JA    = 11,
+    JAE   = 12,
+    JB    = 13,
+    JBE   = 14,
+    JE    = 15,
+    JNE   = 16,
+    CALL  = 17,
+    RET   = 18,
+    MSG   = 19,
+    SQRT  = 20,
+    PUSHM = 21,
+    POPM = 22
 };
 
 enum registers
 {
-    A_X = 1,
-    B_X = 2,
-    C_X = 3,
-    D_X = 4
+    AX = 1,
+    BX = 2,
+    CX = 3,
+    DX = 4
 };
 
-
+const char* messages[] = {"NO ROOTS\n", "INFINITE ROOTS\n"};
 #endif

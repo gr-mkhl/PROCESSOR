@@ -9,6 +9,6 @@ g++ -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal ^
 -Wignored-qualifiers -Wlogical-op -Wno-missing-field-initializers -Wnon-virtual-dtor ^
 -Woverloaded-virtual -Wpointer-arith -Wsign-promo -Wstack-usage=8192 -Wstrict-aliasing ^
 -Wstrict-null-sentinel -Wtype-limits -Wwrite-strings -Werror=vla -D_DEBUG ^
--D_EJUDGE_CLIENT_SIDE assembler.c file_work.c -o asm_prog.exe
+-D_EJUDGE_CLIENT_SIDE assembler.c FILE_WORK/file_work.c -o asm_prog.exe
 
 .\asm_prog.exe ../%1
