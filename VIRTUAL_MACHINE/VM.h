@@ -16,8 +16,12 @@ struct spu_t
 {
     stack_t stack;
     stack_t ret_stack;
+
     int* code;
     size_t ip;
+
+    int* RAM;
+
     size_t num_of_instructions;
     stack_el_t reg[4];
 
