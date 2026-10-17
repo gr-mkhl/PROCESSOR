@@ -1,12 +1,7 @@
 #ifndef _STACK_H_
 #define _STACK_H_
 
-//#define STACK_DEBUG
-//#define CANARY_DEFENSE
-//#define HASH_DEFENSE
-
 #include "stack_struct.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 

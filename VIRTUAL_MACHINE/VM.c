@@ -63,7 +63,7 @@ int main( int argc, char** argv )
                 break;
             case OUT:
                 StackPop(&spu.stack, &spu.value[0]);
-                printf("OUTPUT:" OUTPUT_SPECIFIER "\n", spu.value[0]);
+                printf("OUTPUT: " OUTPUT_SPECIFIER "\n", spu.value[0]);
                 break;
             case IN:
                 printf("INPUT: ");

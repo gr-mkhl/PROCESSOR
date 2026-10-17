@@ -2,7 +2,9 @@
 #define _STACK_STRUCT_H_
 
 
-
+//#define STACK_DEBUG
+//#define CANARY_DEFENSE
+//#define HASH_DEFENSE
 
 
 #ifdef __win32__
@@ -39,6 +41,7 @@
 typedef double stack_el_t;
 #define OUTPUT_SPECIFIER "%lg"
 #define POISON -67
+
 
 enum error_id
 {
@@ -84,5 +87,14 @@ struct stack_t
 
     CANARY_ON(unsigned long long right_stack_canary;)
 };
+
+
+#ifdef CANARY_DEFENSE
+const unsigned long long LEFT_STACK_CANARY_CORRECT_VALUE = 0xDEADBEEF;
+const unsigned long long RIGHT_STACK_CANARY_CORRECT_VALUE = 0xFEEDDED;
+const stack_el_t LEFT_BUFFER_CANARY_CORRECT_VALUE= 0xEDADEDA;
+const stack_el_t RIGHT_BUFFER_CANARY_CORRECT_VALUE= 0xBEDADEDA;
+#endif
+
 
 #endif
