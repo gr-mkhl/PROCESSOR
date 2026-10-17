@@ -10,24 +10,24 @@ int main( int argc, char** argv )
     spu_t spu = {};
     SPUCtor(&spu, code_filename);
 
-    while (getchar() && spu.ip < spu.num_of_instructions)
+    while (spu.ip < spu.num_of_instructions)
     {
-        switch(spu.code[spu.ip++])
+        switch((int)(spu.code[spu.ip++]))
         {
             case PUSH:
-                StackPush(&spu.stack, spu.code[spu.ip++] * COEFF);
+                StackPush(&spu.stack, spu.code[spu.ip++]);
                 break;
             case PUSHR:
-                StackPush(&spu.stack, spu.reg[spu.code[spu.ip++] - 1]);
+                StackPush(&spu.stack, spu.reg[(size_t)(spu.code[spu.ip++]) - 1]);
                 break;
             case PUSHM:
-                StackPush(&spu.stack, spu.RAM[spu.code[spu.ip++]]);
+                StackPush(&spu.stack, spu.RAM[(size_t)(spu.code[spu.ip++])]);
                 break;
             case POP:
-                StackPop(&spu.stack, &spu.reg[spu.code[spu.ip++] - 1]);
+                StackPop(&spu.stack, &spu.reg[(size_t)(spu.code[spu.ip++]) - 1]);
                 break;
             case POPM:
-                StackPop(&spu.stack, &spu.RAM[spu.code[spu.ip++]]);
+                StackPop(&spu.stack, &spu.RAM[(size_t)(spu.code[spu.ip++])]);
                 break;
             case ADD:
                 StackPop(&spu.stack, &spu.value[0]);
@@ -37,10 +37,10 @@ int main( int argc, char** argv )
             case MUL:
                 StackPop(&spu.stack, &spu.value[0]);
                 StackPop(&spu.stack, &spu.value[1]);
-                StackPush(&spu.stack, spu.value[0] * spu.value[1] / COEFF);
+                StackPush(&spu.stack, spu.value[0] * spu.value[1]);
                 break;
             case MSG:
-                printf("MESSAGE: %s", messages[spu.code[spu.ip++] - 1]);
+                printf("MESSAGE: %s", messages[(size_t)(spu.code[spu.ip++]) - 1]);
                 break;
             case SUB:
                 StackPop(&spu.stack, &spu.value[0]);
@@ -49,7 +49,7 @@ int main( int argc, char** argv )
                 break;
             case SQRT:
                 StackPop(&spu.stack, &spu.value[0]);
-                StackPush(&spu.stack, (int)sqrt(spu.value[0] * COEFF));
+                StackPush(&spu.stack, (stack_el_t)sqrt(spu.value[0]));
                 break;
             case DIV:
                 StackPop(&spu.stack, &spu.value[0]);
@@ -59,33 +59,33 @@ int main( int argc, char** argv )
                     exit(1);
                 }
                 StackPop(&spu.stack, &spu.value[1]);
-                StackPush(&spu.stack, spu.value[1] * COEFF / spu.value[0] );
+                StackPush(&spu.stack, spu.value[1] / spu.value[0] );
                 break;
             case OUT:
                 StackPop(&spu.stack, &spu.value[0]);
-                printf("OUTPUT: %d.%d\n", spu.value[0] / COEFF, (int)fabs(spu.value[0] % COEFF));
+                printf("OUTPUT:" OUTPUT_SPECIFIER "\n", spu.value[0]);
                 break;
             case IN:
                 printf("INPUT: ");
-                scanf("%d", &spu.value[0]);
-                StackPush(&spu.stack, spu.value[0] * COEFF);
+                scanf(OUTPUT_SPECIFIER, &spu.value[0]);
+                StackPush(&spu.stack, spu.value[0]);
                 break;
             case CALL:
-                StackPush(&spu.ret_stack, (int)(spu.ip + 1));
-                spu.ip = spu.code[spu.ip];
+                StackPush(&spu.ret_stack, (stack_el_t)(spu.ip + 1));
+                spu.ip = (size_t)spu.code[spu.ip];
                 break;
             case RET:
                 StackPop(&spu.ret_stack, &spu.value[0]);
-                spu.ip = spu.value[0];
+                spu.ip = (size_t)spu.value[0];
                 break;
             case JMP:
-                spu.ip = spu.code[spu.ip];
+                spu.ip = (size_t)spu.code[spu.ip];
                 break;
             case JA:
                 StackPop(&spu.stack, &spu.value[0]);
                 StackPop(&spu.stack, &spu.value[1]);
                 if (spu.value[0] < spu.value[1])
-                    spu.ip = spu.code[spu.ip];
+                    spu.ip = (size_t)spu.code[spu.ip];
                 else
                     spu.ip++;
                 break;
@@ -93,7 +93,7 @@ int main( int argc, char** argv )
                 StackPop(&spu.stack, &spu.value[0]);
                 StackPop(&spu.stack, &spu.value[1]);
                 if (spu.value[0] <= spu.value[1])
-                    spu.ip = spu.code[spu.ip];
+                    spu.ip = (size_t)spu.code[spu.ip];
                 else
                     spu.ip++;
                 break;
@@ -101,7 +101,7 @@ int main( int argc, char** argv )
                 StackPop(&spu.stack, &spu.value[0]);
                 StackPop(&spu.stack, &spu.value[1]);
                 if (spu.value[0] > spu.value[1])
-                    spu.ip = spu.code[spu.ip];
+                    spu.ip = (size_t)spu.code[spu.ip];
                 else
                     spu.ip++;
                 break;
@@ -109,7 +109,7 @@ int main( int argc, char** argv )
                 StackPop(&spu.stack, &spu.value[0]);
                 StackPop(&spu.stack, &spu.value[1]);
                 if (spu.value[0] >= spu.value[1])
-                    spu.ip = spu.code[spu.ip];
+                    spu.ip = (size_t)spu.code[spu.ip];
                 else
                     spu.ip++;
                 break;
@@ -117,7 +117,7 @@ int main( int argc, char** argv )
                 StackPop(&spu.stack, &spu.value[0]);
                 StackPop(&spu.stack, &spu.value[1]);
                 if (spu.value[0] == spu.value[1])
-                    spu.ip = spu.code[spu.ip];
+                    spu.ip = (size_t)spu.code[spu.ip];
                 else
                     spu.ip++;
                 break;
@@ -154,19 +154,19 @@ void SPUCtor( spu_t* spu, const char* input_filename)
     int stat_status = stat(input_filename, &input_file);
     assert(stat_status != -1);
 
-    spu->num_of_instructions = input_file.st_size / sizeof(int);
+    spu->num_of_instructions = input_file.st_size / sizeof(stack_el_t);
 
-    spu->code = (int*)calloc(spu->num_of_instructions, sizeof(int));
-
+    spu->code = (stack_el_t*)calloc(spu->num_of_instructions, sizeof(stack_el_t));
+    spu->RAM = (stack_el_t*)calloc(RAM_SIZE, sizeof(stack_el_t));
     FILE* code_file = fopen(input_filename, "rb");
     assert(code_file != NULL);
 
-    fread(spu->code, sizeof(int), spu->num_of_instructions, code_file);
+    fread(spu->code, sizeof(stack_el_t), spu->num_of_instructions, code_file);
 
     fclose(code_file);
 }
 
-const char* SetFileName( int argc, const char* const * argv )
+const char* SetFileName( int argc, char** argv )
 {
     const char* filename = NULL;
     if (argc > 1 && strcmp(argv[1], "../") != 0)

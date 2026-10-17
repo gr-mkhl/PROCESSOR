@@ -7,7 +7,9 @@
 #include <ctype.h>
 #include <stdint.h>
 #include "FILE_WORK/file_work.h"
+#include "../STACK/stack.h"
 #include "../commands.h"
+
 
 #define DEFAULT_OUTPUT_FILENAME "../a.o"
 
@@ -15,7 +17,7 @@
 
 struct bytecode_t
 {
-    int* code_array;
+    stack_el_t* code_array;
     size_t size;
 };
 

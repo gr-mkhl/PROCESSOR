@@ -20,7 +20,7 @@ int main( int argc, char** argv )
 void Assembler( asm_t* asm_data )
 {
     char command_name[10] = {};
-    int command_arg = 0;
+    stack_el_t command_arg = 0;
     int sscanf_rv = 0;
 
     for (size_t i = 0; i < asm_data->num_of_lines; i++)
@@ -44,7 +44,7 @@ void Assembler( asm_t* asm_data )
                     if (strcmp(command_name, "PUSH") == 0)
                     {
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSH;
-                        sscanf(asm_data->array_of_lines[i], "%*s %d", &command_arg);
+                        sscanf(asm_data->array_of_lines[i], "%*s" OUTPUT_SPECIFIER, &command_arg);
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
                     }
                     else if (strcmp(command_name, "PUSHR") == 0)
@@ -73,13 +73,13 @@ void Assembler( asm_t* asm_data )
                     else if (strcmp(command_name, "PUSHM") == 0)
                     {
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSHM;
-                        sscanf(asm_data->array_of_lines[i], "%*s [%d]", &command_arg);
+                        sscanf(asm_data->array_of_lines[i], "%*s [" OUTPUT_SPECIFIER "]", &command_arg);
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
                     }
                     else if (strcmp(command_name, "POPM") == 0)
                     {
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = POPM;
-                        sscanf(asm_data->array_of_lines[i], "%*s [%d]", &command_arg);
+                        sscanf(asm_data->array_of_lines[i], "%*s [" OUTPUT_SPECIFIER "]", &command_arg);
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
                     }
                     else if (strcmp(command_name, "POP") == 0)
@@ -143,7 +143,7 @@ void Assembler( asm_t* asm_data )
                     if (strcmp(command_name, "MSG") == 0) //TODO - это сложно
                     {
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = MSG;
-                        sscanf(asm_data->array_of_lines[i], "%*s %d", &command_arg);
+                        sscanf(asm_data->array_of_lines[i], "%*s" OUTPUT_SPECIFIER, &command_arg);
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
 
                     }
@@ -238,7 +238,7 @@ void PreAssembling( int argc, char** argv, asm_t* asm_data )
     asm_data->array_of_lines = file.Index;
     asm_data->buffer_ptr = file.Buffer;
     asm_data->num_of_lines = file.NumStrings;
-    asm_data->bytecode.code_array = (int*)calloc(3 * file.NumStrings, sizeof(int));
+    asm_data->bytecode.code_array = (stack_el_t*)calloc(3 * file.NumStrings, sizeof(stack_el_t));
     asm_data->labels = (label_t*)calloc(NUM_OF_LABELS, sizeof(label_t));
     for (size_t i = 0; i < NUM_OF_LABELS; i++)
     {
@@ -257,7 +257,7 @@ void PostAssembling( int argc, char** argv, asm_t* asm_data )
     FILE* output = fopen(output_filename, "wb");
     assert(output != NULL);
 
-    fwrite(asm_data->bytecode.code_array, sizeof(int), asm_data->bytecode.size, output);
+    fwrite(asm_data->bytecode.code_array, sizeof(stack_el_t), asm_data->bytecode.size, output);
 
     fclose(output);
 

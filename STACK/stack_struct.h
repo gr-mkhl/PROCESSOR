@@ -1,6 +1,10 @@
 #ifndef _STACK_STRUCT_H_
 #define _STACK_STRUCT_H_
 
+
+
+
+
 #ifdef __win32__
     #define WINDOWS_SYS
 #endif
@@ -32,8 +36,8 @@
 #endif
 
 
-typedef int stack_el_t;
-#define OUTPUT_SPECIFIER "%d"
+typedef double stack_el_t;
+#define OUTPUT_SPECIFIER "%lg"
 #define POISON -67
 
 enum error_id
