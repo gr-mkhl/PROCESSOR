@@ -9,6 +9,7 @@
 #include "FILE_WORK/file_work.h"
 #include "../STACK/stack.h"
 #include "../commands.h"
+#include "../log.h"
 
 
 #define DEFAULT_OUTPUT_FILENAME "../a.o"
@@ -34,13 +35,15 @@ struct asm_t
     char** array_of_lines;
     char* buffer_ptr;
     size_t num_of_lines;
+    bool need_twice_asm;
 };
 
 void PreAssembling( int argc, char** argv, asm_t* asm_data );
 void Assembler(asm_t* asm_data);
-void DoubleAssembling( asm_t* asm_data );
+void DoAssembling( asm_t* asm_data );
 void PostAssembling( int argc, char** argv, asm_t* asm_data );
 int FindLabel( const char* name, label_t* labels_arr );
 int SetLabel( const char* name, int address, label_t* labels_arr );
+void SwitchRegister( asm_t* asm_data, const char* name );
 
 #endif

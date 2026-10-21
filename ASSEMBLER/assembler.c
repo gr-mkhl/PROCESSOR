@@ -4,14 +4,15 @@
 
 int main( int argc, char** argv )
 {
+ON_LOG(STARTLOG())
     asm_t AsmData = {};
 
     PreAssembling(argc, argv, &AsmData);
 
-    DoubleAssembling(&AsmData);
+    DoAssembling(&AsmData);
 
     PostAssembling(argc, argv, &AsmData);
-
+ON_LOG(ENDLOG())
     return 0;
 }
 
@@ -19,6 +20,7 @@ int main( int argc, char** argv )
 
 void Assembler( asm_t* asm_data )
 {
+
     char command_name[10] = {};
     stack_el_t command_arg = 0;
     int sscanf_rv = 0;
@@ -47,28 +49,23 @@ void Assembler( asm_t* asm_data )
                         sscanf(asm_data->array_of_lines[i], "%*s" OUTPUT_SPECIFIER, &command_arg);
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
                     }
+                    else if (strcmp(command_name, "PUSHMR") == 0)
+                    {
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSHMR;
+                        sscanf(asm_data->array_of_lines[i], "%*s [%[ABCDX]", command_name);
+                        SwitchRegister(asm_data, command_name);
+                    }
+                    else if (strcmp(command_name, "POPMR") == 0)
+                    {
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = POPMR;
+                        sscanf(asm_data->array_of_lines[i], "%*s [%[ABCDX]", command_name);
+                        SwitchRegister(asm_data, command_name);
+                    }
                     else if (strcmp(command_name, "PUSHR") == 0)
                     {
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSHR;
                         sscanf(asm_data->array_of_lines[i], "%*s %s", command_name);
-                        switch(command_name[0])
-                        {
-                            case 'A':
-                                asm_data->bytecode.code_array[asm_data->bytecode.size++] = AX;
-                                break;
-                            case 'B':
-                                asm_data->bytecode.code_array[asm_data->bytecode.size++] = BX;
-                                break;
-                            case 'C':
-                                asm_data->bytecode.code_array[asm_data->bytecode.size++] = CX;
-                                break;
-                            case 'D':
-                                asm_data->bytecode.code_array[asm_data->bytecode.size++] = DX;
-                                break;
-                            default:
-                                fprintf(stderr, "ASSEMBLING ERROR: INCORRECT REGISTER NAME\n");
-                                exit(1);
-                        }
+                        SwitchRegister(asm_data, command_name);
                     }
                     else if (strcmp(command_name, "PUSHM") == 0)
                     {
@@ -84,26 +81,9 @@ void Assembler( asm_t* asm_data )
                     }
                     else if (strcmp(command_name, "POP") == 0)
                     {
-                        sscanf(asm_data->array_of_lines[i], "%*s %s", command_name);
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = POP;
-                        switch(command_name[0])
-                        {
-                            case 'A':
-                                asm_data->bytecode.code_array[asm_data->bytecode.size++] = AX;
-                                break;
-                            case 'B':
-                                asm_data->bytecode.code_array[asm_data->bytecode.size++] = BX;
-                                break;
-                            case 'C':
-                                asm_data->bytecode.code_array[asm_data->bytecode.size++] = CX;
-                                break;
-                            case 'D':
-                                asm_data->bytecode.code_array[asm_data->bytecode.size++] = DX;
-                                break;
-                            default:
-                                fprintf(stderr, "ASSEMBLING ERROR: INCORRECT REGISTER NAME\n");
-                                exit(1);
-                        }
+                        sscanf(asm_data->array_of_lines[i], "%*s %s", command_name);
+                        SwitchRegister(asm_data, command_name);
                     }
                     break;
                 }
@@ -118,11 +98,17 @@ void Assembler( asm_t* asm_data )
                             sscanf_rv = sscanf(asm_data->array_of_lines[i], "%*s %*s %s", command_name);
 
                             int address = FindLabel(command_name, asm_data->labels);
-                            asm_data->bytecode.code_array[asm_data->bytecode.size++] = address;
+                            if (address == -1)
+                            {
+                                asm_data->need_twice_asm = true;
+                                asm_data->bytecode.size++;
+                            }
+                            else
+                                asm_data->bytecode.code_array[asm_data->bytecode.size++] = address;
                         }
                         else
                         {
-                            fprintf(stderr, "ASSEMBLING ERROR: INCORRECT LABEL\n");
+                            fprintf(stderr, "ASSEMBLING ERROR: NO LABEL\n");
                             exit(1);
                         }
                     }
@@ -140,7 +126,7 @@ void Assembler( asm_t* asm_data )
                 }
                 case 'M':
                 {
-                    if (strcmp(command_name, "MSG") == 0) //TODO - это сложно
+                    if (strcmp(command_name, "MSG") == 0)
                     {
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = MSG;
                         sscanf(asm_data->array_of_lines[i], "%*s" OUTPUT_SPECIFIER, &command_arg);
@@ -160,7 +146,11 @@ void Assembler( asm_t* asm_data )
                 }
                 case 'D':
                 {
-                    asm_data->bytecode.code_array[asm_data->bytecode.size++] = DIV;
+                    if (strcmp(command_name, "DIV") == 0)
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = DIV;
+
+                    else if (strcmp(command_name, "DRAW") == 0)
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = DRAW;
                     break;
                 }
                 case 'S':
@@ -204,7 +194,13 @@ void Assembler( asm_t* asm_data )
                         sscanf_rv = sscanf(asm_data->array_of_lines[i], "%*s %*s %s", command_name);
 
                         int address = FindLabel(command_name, asm_data->labels);
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = address;
+                        if (address == -1)
+                        {
+                            asm_data->need_twice_asm = true;
+                            asm_data->bytecode.size++;
+                        }
+                        else
+                            asm_data->bytecode.code_array[asm_data->bytecode.size++] = address;
                     }
                     else
                     {
@@ -267,11 +263,18 @@ void PostAssembling( int argc, char** argv, asm_t* asm_data )
     free(asm_data->bytecode.code_array);
 }
 
-void DoubleAssembling( asm_t* asm_data )
+void DoAssembling( asm_t* asm_data )
 {
+ON_LOG(LOG("First assembling"))
     Assembler(asm_data);
-    asm_data->bytecode.size = 0;
-    Assembler(asm_data);
+
+    if (asm_data->need_twice_asm == true)
+    {
+ON_LOG(LOG("Second assembling"))
+        asm_data->bytecode.size = 0;
+        Assembler(asm_data);
+    }
+
 }
 
 int FindLabel( const char* name, label_t* labels_arr )
@@ -279,9 +282,12 @@ int FindLabel( const char* name, label_t* labels_arr )
     for (size_t i = 0; i < NUM_OF_LABELS; i++)
     {
         if (strcmp(labels_arr[i].label_name, name) == 0)
+        {
+ON_LOG(LOG("Find label: %s, address: %d", name, labels_arr[i].label_address))
             return labels_arr[i].label_address;
+        }
     }
-
+ON_LOG(LOG("Didn't find label: %s", name))
     return -1;
 }
 
@@ -293,9 +299,32 @@ int SetLabel( const char* name, int address, label_t* labels_arr )
         {
             strcpy(labels_arr[i].label_name, name);
             labels_arr[i].label_address = address;
+ON_LOG(LOG("Set label: %s, address: %d", name, address))
             return 1;
         }
     }
-
+ON_LOG(LOG("No more space for new labels"))
     return 0;
+}
+
+void SwitchRegister( asm_t* asm_data, const char* name )
+{
+    switch(name[0])
+    {
+        case 'A':
+            asm_data->bytecode.code_array[asm_data->bytecode.size++] = AX;
+            break;
+        case 'B':
+            asm_data->bytecode.code_array[asm_data->bytecode.size++] = BX;
+            break;
+        case 'C':
+            asm_data->bytecode.code_array[asm_data->bytecode.size++] = CX;
+            break;
+        case 'D':
+            asm_data->bytecode.code_array[asm_data->bytecode.size++] = DX;
+            break;
+        default:
+            fprintf(stderr, "ASSEMBLING ERROR: INCORRECT REGISTER NAME\n");
+            exit(1);
+    }
 }

@@ -4,17 +4,15 @@ IN
 POP BX
 IN
 POP CX
-PUSHR CX
-PUSHR BX
-PUSHR AX
 
-
+PUSH 1
 CALL : SOLVE_SQUARE
 HLT
 
 
 : SOLVE_SQUARE
     PUSH 0
+    PUSHR AX
     JE : SOLVE_LINEAR        ; if (a == 0) -> linear equation
 
     CALL : COUNT_DISCR       ; else        -> classic square equation

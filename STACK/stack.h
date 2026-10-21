@@ -2,6 +2,7 @@
 #define _STACK_H_
 
 #include "stack_struct.h"
+#include "verify.h"
 #include <stdio.h>
 #include <stdlib.h>
 

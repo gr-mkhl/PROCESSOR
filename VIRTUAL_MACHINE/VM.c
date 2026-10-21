@@ -3,8 +3,11 @@
 
 int main( int argc, char** argv )
 {
+ON_LOG(STARTLOG())
     const char* code_filename = NULL;
-
+    command_f array_of_commands[] = {hlt, push, add, sub, mul, div, out, in, pushr,
+                                     pop, jmp, ja, jae, jb, jbe, je, jne, call,
+                                     ret, sqrt, pushm, popm, popmr, pushmr, draw, msg};
     code_filename = SetFileName(argc, argv);
 
     spu_t spu = {};
@@ -12,131 +15,257 @@ int main( int argc, char** argv )
 
     while (spu.ip < spu.num_of_instructions)
     {
-        switch((int)(spu.code[spu.ip++]))
+        if (CompareDoubles(spu.code[spu.ip], HLT) == EQUAL)
         {
-            case PUSH:
-                StackPush(&spu.stack, spu.code[spu.ip++]);
-                break;
-            case PUSHR:
-                StackPush(&spu.stack, spu.reg[(size_t)(spu.code[spu.ip++]) - 1]);
-                break;
-            case PUSHM:
-                StackPush(&spu.stack, spu.RAM[(size_t)(spu.code[spu.ip++])]);
-                break;
-            case POP:
-                StackPop(&spu.stack, &spu.reg[(size_t)(spu.code[spu.ip++]) - 1]);
-                break;
-            case POPM:
-                StackPop(&spu.stack, &spu.RAM[(size_t)(spu.code[spu.ip++])]);
-                break;
-            case ADD:
-                StackPop(&spu.stack, &spu.value[0]);
-                StackPop(&spu.stack, &spu.value[1]);
-                StackPush(&spu.stack, spu.value[0] + spu.value[1]);
-                break;
-            case MUL:
-                StackPop(&spu.stack, &spu.value[0]);
-                StackPop(&spu.stack, &spu.value[1]);
-                StackPush(&spu.stack, spu.value[0] * spu.value[1]);
-                break;
-            case MSG:
-                printf("MESSAGE: %s", messages[(size_t)(spu.code[spu.ip++]) - 1]);
-                break;
-            case SUB:
-                StackPop(&spu.stack, &spu.value[0]);
-                StackPop(&spu.stack, &spu.value[1]);
-                StackPush(&spu.stack, spu.value[1] - spu.value[0]);
-                break;
-            case SQRT:
-                StackPop(&spu.stack, &spu.value[0]);
-                StackPush(&spu.stack, (stack_el_t)sqrt(spu.value[0]));
-                break;
-            case DIV:
-                StackPop(&spu.stack, &spu.value[0]);
-                if (spu.value[0] == 0)
-                {
-                    fprintf(stderr, "RUNTIME ERROR: DIVISION BY ZERO");
-                    exit(1);
-                }
-                StackPop(&spu.stack, &spu.value[1]);
-                StackPush(&spu.stack, spu.value[1] / spu.value[0] );
-                break;
-            case OUT:
-                StackPop(&spu.stack, &spu.value[0]);
-                printf("OUTPUT: " OUTPUT_SPECIFIER "\n", spu.value[0]);
-                break;
-            case IN:
-                printf("INPUT: ");
-                scanf(OUTPUT_SPECIFIER, &spu.value[0]);
-                StackPush(&spu.stack, spu.value[0]);
-                break;
-            case CALL:
-                StackPush(&spu.ret_stack, (stack_el_t)(spu.ip + 1));
-                spu.ip = (size_t)spu.code[spu.ip];
-                break;
-            case RET:
-                StackPop(&spu.ret_stack, &spu.value[0]);
-                spu.ip = (size_t)spu.value[0];
-                break;
-            case JMP:
-                spu.ip = (size_t)spu.code[spu.ip];
-                break;
-            case JA:
-                StackPop(&spu.stack, &spu.value[0]);
-                StackPop(&spu.stack, &spu.value[1]);
-                if (spu.value[0] < spu.value[1])
-                    spu.ip = (size_t)spu.code[spu.ip];
-                else
-                    spu.ip++;
-                break;
-            case JAE:
-                StackPop(&spu.stack, &spu.value[0]);
-                StackPop(&spu.stack, &spu.value[1]);
-                if (spu.value[0] <= spu.value[1])
-                    spu.ip = (size_t)spu.code[spu.ip];
-                else
-                    spu.ip++;
-                break;
-            case JB:
-                StackPop(&spu.stack, &spu.value[0]);
-                StackPop(&spu.stack, &spu.value[1]);
-                if (spu.value[0] > spu.value[1])
-                    spu.ip = (size_t)spu.code[spu.ip];
-                else
-                    spu.ip++;
-                break;
-            case JBE:
-                StackPop(&spu.stack, &spu.value[0]);
-                StackPop(&spu.stack, &spu.value[1]);
-                if (spu.value[0] >= spu.value[1])
-                    spu.ip = (size_t)spu.code[spu.ip];
-                else
-                    spu.ip++;
-                break;
-            case JE:
-                StackPop(&spu.stack, &spu.value[0]);
-                StackPop(&spu.stack, &spu.value[1]);
-                if (spu.value[0] == spu.value[1])
-                    spu.ip = (size_t)spu.code[spu.ip];
-                else
-                    spu.ip++;
-                break;
-            case HLT:
-                SPUDtor(&spu);
-                return 0;
-            default:
-                fprintf(stderr, "RUNTIME ERROR: INCORRECT COMMAND\n");
-                exit(1);
+            hlt(&spu);
+ON_LOG(LOG("Find HLT on ip: %zu", spu.ip))
+ON_LOG(ENDLOG())
+            return 0;
         }
+        array_of_commands[(int)(spu.code[spu.ip++])](&spu);
     }
-    if (spu.ip == spu.num_of_instructions)
-    {
-        fprintf(stderr, "RUNTIME ERROR: SEGMENTATION FAULT\n");
-        SPUDtor(&spu);
-        return 1;
-    }
+    fprintf(stderr, "RUNTIME ERROR: SEGMENTATION FAULT\n");
+    SPUDtor(&spu);
+ON_LOG(ENDLOG();)
+    return 1;
+}
+
+
+
+void push( spu_t* spu )
+{
+    StackPush(&spu->stack, spu->code[spu->ip++]);
+}
+
+void pop( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->reg[(size_t)(spu->code[spu->ip++]) - 1]);
+ON_LOG(LOG("Popped {" OUTPUT_SPECIFIER "} to register {%c%c}", spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1], (char)(spu->code[spu->ip - 1]) - 1 + 'A', 'X'))
+}
+
+void pushr( spu_t* spu )
+{
+    StackPush(&spu->stack, spu->reg[(size_t)(spu->code[spu->ip++]) - 1]);
+ON_LOG(LOG("Pushed {" OUTPUT_SPECIFIER "} from register {%c%c}", spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1], (char)(spu->code[spu->ip - 1]) - 1 + 'A', 'X'))
+}
+
+void pushmr( spu_t* spu )
+{
+    StackPush(&spu->stack, spu->RAM[(size_t)spu->reg[(size_t)(spu->code[spu->ip++]) - 1]]);
+ON_LOG(LOG("Pushed {" OUTPUT_SPECIFIER "} from RAM[%zu]", spu->RAM[(size_t)spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1]], (size_t)spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1]))
 
 }
+
+void popmr( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->RAM[(size_t)spu->reg[(size_t)(spu->code[spu->ip++]) - 1]]);
+ON_LOG(LOG("Popped {" OUTPUT_SPECIFIER "} to RAM[%zu]", spu->RAM[(size_t)spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1]], (size_t)spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1]))
+}
+
+void pushm( spu_t* spu )
+{
+    StackPush(&spu->stack, spu->RAM[(size_t)(spu->code[spu->ip++])]);
+ON_LOG(LOG("Pushed {" OUTPUT_SPECIFIER "} from RAM[%zu]", spu->RAM[(size_t)(spu->code[spu->ip - 1])], (size_t)(spu->code[spu->ip - 1])))
+}
+
+void popm( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->RAM[(size_t)(spu->code[spu->ip++])]);
+ON_LOG(LOG("Popped {" OUTPUT_SPECIFIER "} to RAM[%zu]", spu->RAM[(size_t)(spu->code[spu->ip - 1])], (size_t)(spu->code[spu->ip - 1])))
+}
+
+void add( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPop(&spu->stack, &spu->value[1]);
+    StackPush(&spu->stack, spu->value[0] + spu->value[1]);
+ON_LOG(LOG("Added {" OUTPUT_SPECIFIER "} with {" OUTPUT_SPECIFIER "}, result: {" OUTPUT_SPECIFIER "}", spu->value[0], spu->value[1], spu->value[0] + spu->value[1]))
+}
+
+void mul( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPop(&spu->stack, &spu->value[1]);
+    StackPush(&spu->stack, spu->value[0] * spu->value[1]);
+ON_LOG(LOG("Mul {" OUTPUT_SPECIFIER "} with {" OUTPUT_SPECIFIER "}, result: {" OUTPUT_SPECIFIER "}", spu->value[0], spu->value[1], spu->value[0] * spu->value[1]))
+}
+
+void sub( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPop(&spu->stack, &spu->value[1]);
+    StackPush(&spu->stack, spu->value[1] - spu->value[0]);
+ON_LOG(LOG("Sub {" OUTPUT_SPECIFIER "} with {" OUTPUT_SPECIFIER "}, result: {" OUTPUT_SPECIFIER "}", spu->value[1], spu->value[0], spu->value[1] - spu->value[0]))
+}
+
+void sqrt( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPush(&spu->stack, (stack_el_t)sqrt(spu->value[0]));
+ON_LOG(LOG("Sqrt {" OUTPUT_SPECIFIER "}, result: {" OUTPUT_SPECIFIER "}", spu->value[0], (stack_el_t)sqrt(spu->value[0])))
+
+}
+
+void div( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    if (CompareDoubles(spu->value[0], 0) == EQUAL)
+    {
+        fprintf(stderr, "RUNTIME ERROR: DIVISION BY ZERO");
+        exit(1);
+    }
+    StackPop(&spu->stack, &spu->value[1]);
+    StackPush(&spu->stack, spu->value[1] / spu->value[0] );
+ON_LOG(LOG("Div {" OUTPUT_SPECIFIER "} with {" OUTPUT_SPECIFIER "}, result: {" OUTPUT_SPECIFIER "}", spu->value[1], spu->value[0], spu->value[1] / spu->value[0]))
+}
+
+void draw( spu_t* spu )
+{
+    for (size_t i = 0; i < (size_t)sqrt(RAM_SIZE); i++)
+    {
+        for (size_t j = 0; j < (size_t)sqrt(RAM_SIZE); j++)
+        {
+            if (spu->RAM[i * (size_t)sqrt(RAM_SIZE) + j] == 0)
+                printf("[.]");
+            else
+                printf("[*]");
+        }
+        printf("\n");
+    }
+ON_LOG(LOG("Drew RAM"))
+
+}
+
+void out( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    printf("OUTPUT: " OUTPUT_SPECIFIER "\n", spu->value[0]);
+ON_LOG(LOG("Out: {" OUTPUT_SPECIFIER "}", spu->value[0]))
+}
+
+void in( spu_t* spu )
+{
+    printf("INPUT: ");
+    scanf(OUTPUT_SPECIFIER, &spu->value[0]);
+    StackPush(&spu->stack, spu->value[0]);
+ON_LOG(LOG("In: {" OUTPUT_SPECIFIER "}", spu->value[0]))
+}
+
+void call( spu_t* spu )
+{
+    StackPush(&spu->ret_stack, (stack_el_t)(spu->ip + 1));
+ON_LOG(LOG("Jumped(call) from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}", spu->ip + 1, spu->code[spu->ip]))
+    spu->ip = (size_t)spu->code[spu->ip];
+}
+
+void ret( spu_t* spu )
+{
+    StackPop(&spu->ret_stack, &spu->value[0]);
+    spu->ip = (size_t)spu->value[0];
+ON_LOG(LOG("Return to ip: {" OUTPUT_SPECIFIER "}", spu->value[0]))
+}
+
+void jmp( spu_t* spu )
+{
+ON_LOG(LOG("Jumped from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}", spu->ip, spu->code[spu->ip]))
+    spu->ip = (size_t)spu->code[spu->ip];
+}
+
+void jae( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPop(&spu->stack, &spu->value[1]);
+    if (CompareDoubles(spu->value[0], spu->value[1]) == LESS || CompareDoubles(spu->value[0], spu->value[1]) == EQUAL)
+    {
+        spu->ip = (size_t)spu->code[spu->ip];
+ON_LOG(LOG("Jumped(jae) from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}, because {" OUTPUT_SPECIFIER "} %s {" OUTPUT_SPECIFIER "}", spu->ip, spu->code[spu->ip], spu->value[1], ">=", spu->value[0]))
+    }
+
+    else
+        spu->ip++;
+}
+
+void je( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPop(&spu->stack, &spu->value[1]);
+    if (CompareDoubles(spu->value[0], spu->value[1]) == EQUAL)
+    {
+        spu->ip = (size_t)spu->code[spu->ip];
+ON_LOG(LOG("Jumped(je) from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}, because {" OUTPUT_SPECIFIER "} %s {" OUTPUT_SPECIFIER "}", spu->ip, spu->code[spu->ip], spu->value[1], "==", spu->value[0]))
+    }
+    else
+        spu->ip++;
+}
+
+void ja( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPop(&spu->stack, &spu->value[1]);
+    if (CompareDoubles(spu->value[0], spu->value[1]) == LESS)
+    {
+        spu->ip = (size_t)spu->code[spu->ip];
+ON_LOG(LOG("Jumped(ja) from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}, because {" OUTPUT_SPECIFIER "} %s {" OUTPUT_SPECIFIER "}", spu->ip, spu->code[spu->ip], spu->value[1], ">", spu->value[0]))
+    }
+    else
+        spu->ip++;
+}
+
+void jbe( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPop(&spu->stack, &spu->value[1]);
+    if (CompareDoubles(spu->value[0], spu->value[1]) == MORE || CompareDoubles(spu->value[0], spu->value[1]) == EQUAL)
+    {
+        spu->ip = (size_t)spu->code[spu->ip];
+ON_LOG(LOG("Jumped(jbe) from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}, because {" OUTPUT_SPECIFIER "} %s {" OUTPUT_SPECIFIER "}", spu->ip, spu->code[spu->ip], spu->value[1], "<=", spu->value[0]))
+    }
+    else
+        spu->ip++;
+}
+
+void jb( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPop(&spu->stack, &spu->value[1]);
+    if (CompareDoubles(spu->value[0], spu->value[1]) == MORE)
+    {
+        spu->ip = (size_t)spu->code[spu->ip];
+ON_LOG(LOG("Jumped(jb) from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}, because {" OUTPUT_SPECIFIER "} %s {" OUTPUT_SPECIFIER "}", spu->ip, spu->code[spu->ip], spu->value[1], "<", spu->value[0]))
+
+    }
+    else
+        spu->ip++;
+}
+
+void jne( spu_t* spu )
+{
+    StackPop(&spu->stack, &spu->value[0]);
+    StackPop(&spu->stack, &spu->value[1]);
+    if (CompareDoubles(spu->value[0], spu->value[1]) != EQUAL)
+    {
+        spu->ip = (size_t)spu->code[spu->ip];
+ON_LOG(LOG("Jumped(jne) from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}, because {" OUTPUT_SPECIFIER "} %s {" OUTPUT_SPECIFIER "}", spu->ip, spu->code[spu->ip], spu->value[1], "!=", spu->value[0]))
+
+    }
+    else
+        spu->ip++;
+}
+
+void hlt( spu_t* spu )
+{
+    SPUDtor(spu);
+ON_LOG(LOG("Halt"))
+}
+
+void msg( spu_t* spu )
+{
+    printf("MESSAGE: %s", messages[(size_t)(spu->code[spu->ip++]) - 1]);
+ON_LOG(LOG("Msg: {%s}", messages[(size_t)(spu->code[spu->ip++]) - 1]))
+
+}
+
+
 
 void SPUDtor( spu_t* spu )
 {
@@ -175,4 +304,17 @@ const char* SetFileName( int argc, char** argv )
         filename = DEFAULT_INPUT_FILENAME;
 
     return filename;
+}
+
+int CompareDoubles( const double a, const double b )
+{
+    if (isnan(a) == 1 || isnan(b) == 1)
+        return UNDEF;
+    if ((a - b) > EPS)
+        return MORE;
+    else if ((a - b) < -EPS)
+        return LESS;
+    else if ((a - b) < EPS)
+        return EQUAL;
+    return UNDEF;
 }
