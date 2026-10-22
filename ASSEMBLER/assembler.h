@@ -46,4 +46,7 @@ int FindLabel( const char* name, label_t* labels_arr );
 int SetLabel( const char* name, int address, label_t* labels_arr );
 void SwitchRegister( asm_t* asm_data, const char* name );
 
+void ParsingPushArg( const char* command_arg_str, asm_t* asm_data );
+void ParsingPopArg( const char* pop_arg, asm_t* asm_data );
+
 #endif

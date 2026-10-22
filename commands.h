@@ -4,35 +4,34 @@
 //TODO сделать ABRT, как яд
 enum commands
 {
-    HLT    = 0,
-    PUSH   = 1,
-    ADD    = 2,
-    SUB    = 3,
-    MUL    = 4,
-    DIV    = 5,
-    OUT    = 6,
-    IN     = 7,
-    PUSHR  = 8,
-    POP    = 9,
-    JMP    = 10,
-    JA     = 11,
-    JAE    = 12,
-    JB     = 13,
-    JBE    = 14,
-    JE     = 15,
-    JNE    = 16,
-    CALL   = 17,
-    RET    = 18,
-    SQRT   = 19,
-    PUSHM  = 20,
-    POPM   = 21,
-    POPMR  = 22,
-    PUSHMR = 23,
-    DRAW   = 24,
-    MSG    = 25 //test version
+    HLT    = 0x00,
+    PUSH   = 0x01,
+    ADD    = 0x02,
+    SUB    = 0x03,
+    MUL    = 0x04,
+    DIV    = 0x05,
+    OUT    = 0x06,
+    IN     = 0x07,
+    POP    = 0x08,
+    JMP    = 0x09,
+    JA     = 0x0A,
+    JAE    = 0x0B,
+    JB     = 0x0C,
+    JBE    = 0x0D,
+    JE     = 0x0E,
+    JNE    = 0x0F,
+    CALL   = 0x10,
+    RET    = 0x11,
+    SQRT   = 0x12,
+    DRAW   = 0x13,
+    MSG    = 0x14 //test version
 };
 
-
+#define CMD_MASK 0x1F
+#define CNST_MASK 0x20
+#define REG_MASK 0x40
+#define REG_NUM 0x300
+#define RAM_MASK 0x80
 
 enum registers
 {
@@ -42,5 +41,5 @@ enum registers
     DX = 4
 };
 
-const char* messages[] = {"NO ROOTS\n", "INFINITE ROOTS\n"};
+const char* messages[] = {"NO ROOTS", "INFINITE ROOTS"};
 #endif

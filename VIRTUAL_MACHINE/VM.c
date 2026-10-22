@@ -5,9 +5,9 @@ int main( int argc, char** argv )
 {
 ON_LOG(STARTLOG())
     const char* code_filename = NULL;
-    command_f array_of_commands[] = {hlt, push, add, sub, mul, div, out, in, pushr,
-                                     pop, jmp, ja, jae, jb, jbe, je, jne, call,
-                                     ret, sqrt, pushm, popm, popmr, pushmr, draw, msg};
+    command_f array_of_commands[] = {hlt, push, add, sub, mul, div, out, in,
+                                     pop, jmp, ja, jae, jb, jbe, je, jne,
+                                     call, ret, sqrt, draw, msg};
     code_filename = SetFileName(argc, argv);
 
     spu_t spu = {};
@@ -17,12 +17,12 @@ ON_LOG(STARTLOG())
     {
         if (CompareDoubles(spu.code[spu.ip], HLT) == EQUAL)
         {
-            hlt(&spu);
 ON_LOG(LOG("Find HLT on ip: %zu", spu.ip))
+            hlt(&spu);
 ON_LOG(ENDLOG())
             return 0;
         }
-        array_of_commands[(int)(spu.code[spu.ip++])](&spu);
+        array_of_commands[(int)(spu.code[spu.ip++]) & CMD_MASK](&spu);
     }
     fprintf(stderr, "RUNTIME ERROR: SEGMENTATION FAULT\n");
     SPUDtor(&spu);
@@ -34,44 +34,50 @@ ON_LOG(ENDLOG();)
 
 void push( spu_t* spu )
 {
-    StackPush(&spu->stack, spu->code[spu->ip++]);
+ON_LOG(LOG("Start push_cmd"))
+    stack_el_t res = 0;
+    size_t cmd_ip = spu->ip - 1;
+
+    if ((int)spu->code[cmd_ip] & CNST_MASK)
+    {
+        res += spu->code[spu->ip++];
+ON_LOG(LOG("const arg: {" OUTPUT_SPECIFIER "}", spu->code[spu->ip - 1]))
+    }
+    if ((int)spu->code[cmd_ip] & REG_MASK)
+    {
+        res += spu->reg[((int)spu->code[cmd_ip] & REG_NUM) >> 8];
+ON_LOG(LOG("reg arg: {%d}", ((int)spu->code[cmd_ip] & REG_NUM) >> 8))
+ON_LOG(LOG("reg arg: {%c%c}", (((int)(spu->code[cmd_ip]) & REG_NUM) >> 8) + 'A', 'X'))
+    }
+    if ((int)spu->code[cmd_ip] & RAM_MASK)
+    {
+ON_LOG(LOG("ram arg: RAM[%zu], value: {" OUTPUT_SPECIFIER "}", (size_t)res, spu->RAM[(size_t)res]))
+        res = spu->RAM[(size_t)res];
+    }
+    StackPush(&spu->stack, res);
+ON_LOG(LOG("Pushed {" OUTPUT_SPECIFIER "}", res))
 }
 
 void pop( spu_t* spu )
 {
-    StackPop(&spu->stack, &spu->reg[(size_t)(spu->code[spu->ip++]) - 1]);
-ON_LOG(LOG("Popped {" OUTPUT_SPECIFIER "} to register {%c%c}", spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1], (char)(spu->code[spu->ip - 1]) - 1 + 'A', 'X'))
-}
+    stack_el_t* res_ptr = NULL;
+    size_t cmd_ip = spu->ip - 1;
 
-void pushr( spu_t* spu )
-{
-    StackPush(&spu->stack, spu->reg[(size_t)(spu->code[spu->ip++]) - 1]);
-ON_LOG(LOG("Pushed {" OUTPUT_SPECIFIER "} from register {%c%c}", spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1], (char)(spu->code[spu->ip - 1]) - 1 + 'A', 'X'))
-}
-
-void pushmr( spu_t* spu )
-{
-    StackPush(&spu->stack, spu->RAM[(size_t)spu->reg[(size_t)(spu->code[spu->ip++]) - 1]]);
-ON_LOG(LOG("Pushed {" OUTPUT_SPECIFIER "} from RAM[%zu]", spu->RAM[(size_t)spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1]], (size_t)spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1]))
-
-}
-
-void popmr( spu_t* spu )
-{
-    StackPop(&spu->stack, &spu->RAM[(size_t)spu->reg[(size_t)(spu->code[spu->ip++]) - 1]]);
-ON_LOG(LOG("Popped {" OUTPUT_SPECIFIER "} to RAM[%zu]", spu->RAM[(size_t)spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1]], (size_t)spu->reg[(size_t)(spu->code[spu->ip - 1]) - 1]))
-}
-
-void pushm( spu_t* spu )
-{
-    StackPush(&spu->stack, spu->RAM[(size_t)(spu->code[spu->ip++])]);
-ON_LOG(LOG("Pushed {" OUTPUT_SPECIFIER "} from RAM[%zu]", spu->RAM[(size_t)(spu->code[spu->ip - 1])], (size_t)(spu->code[spu->ip - 1])))
-}
-
-void popm( spu_t* spu )
-{
-    StackPop(&spu->stack, &spu->RAM[(size_t)(spu->code[spu->ip++])]);
-ON_LOG(LOG("Popped {" OUTPUT_SPECIFIER "} to RAM[%zu]", spu->RAM[(size_t)(spu->code[spu->ip - 1])], (size_t)(spu->code[spu->ip - 1])))
+    if (!((int)spu->code[cmd_ip] & RAM_MASK))
+    {
+        if ((int)spu->code[cmd_ip] & REG_MASK)
+            res_ptr = &spu->reg[((int)spu->code[cmd_ip] & REG_NUM) >> 8];
+    }
+    else
+    {
+        size_t ram_ip = 0;
+        if ((int)spu->code[cmd_ip] & REG_MASK)
+            ram_ip += (size_t)spu->reg[((int)spu->code[cmd_ip] & REG_NUM) >> 8];
+        if ((int)spu->code[cmd_ip] & CNST_MASK)
+            ram_ip += (size_t)spu->code[spu->ip++];
+        res_ptr = &spu->RAM[ram_ip];
+    }
+    StackPop(&spu->stack, res_ptr);
 }
 
 void add( spu_t* spu )
@@ -125,7 +131,7 @@ void draw( spu_t* spu )
     {
         for (size_t j = 0; j < (size_t)sqrt(RAM_SIZE); j++)
         {
-            if (spu->RAM[i * (size_t)sqrt(RAM_SIZE) + j] == 0)
+            if (CompareDoubles(spu->RAM[i * (size_t)sqrt(RAM_SIZE) + j], 0))
                 printf("[.]");
             else
                 printf("[*]");
@@ -154,7 +160,7 @@ ON_LOG(LOG("In: {" OUTPUT_SPECIFIER "}", spu->value[0]))
 void call( spu_t* spu )
 {
     StackPush(&spu->ret_stack, (stack_el_t)(spu->ip + 1));
-ON_LOG(LOG("Jumped(call) from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}", spu->ip + 1, spu->code[spu->ip]))
+ON_LOG(LOG("Jumped(call) from ip: {%zu} to ip: {" OUTPUT_SPECIFIER "}", spu->ip, spu->code[spu->ip]))
     spu->ip = (size_t)spu->code[spu->ip];
 }
 
@@ -260,8 +266,8 @@ ON_LOG(LOG("Halt"))
 
 void msg( spu_t* spu )
 {
-    printf("MESSAGE: %s", messages[(size_t)(spu->code[spu->ip++]) - 1]);
-ON_LOG(LOG("Msg: {%s}", messages[(size_t)(spu->code[spu->ip++]) - 1]))
+    printf("MESSAGE: %s\n", messages[(size_t)(spu->code[spu->ip++]) - 1]);
+ON_LOG(LOG("Msg: {%s}", messages[(size_t)(spu->code[spu->ip - 1]) - 1]))
 
 }
 
@@ -318,3 +324,5 @@ int CompareDoubles( const double a, const double b )
         return EQUAL;
     return UNDEF;
 }
+
+

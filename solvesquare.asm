@@ -12,31 +12,31 @@ HLT
 
 : SOLVE_SQUARE
     PUSH 0
-    PUSHR AX
+    PUSH AX
     JE : SOLVE_LINEAR        ; if (a == 0) -> linear equation
 
     CALL : COUNT_DISCR       ; else        -> classic square equation
 
-    PUSHR DX
+    PUSH DX
     PUSH 0
     JB : NO_ROOTS
 
-    PUSHR DX
+    PUSH DX
     PUSH 0
     JE : ONE_ROOT
 
-    PUSHR DX
+    PUSH DX
     PUSH 0
     JA : TWO_ROOTS
 
 : COUNT_DISCR
-    PUSHR BX
-    PUSHR BX
+    PUSH BX
+    PUSH BX
     MUL
     PUSH 4
-    PUSHR AX
+    PUSH AX
     MUL
-    PUSHR CX
+    PUSH CX
     MUL
     SUB
     POP DX
@@ -44,10 +44,10 @@ HLT
 
 : ONE_ROOT
     PUSH -1
-    PUSHR BX
+    PUSH BX
     MUL
     PUSH 2
-    PUSHR AX
+    PUSH AX
     MUL
     DIV
     OUT
@@ -55,25 +55,25 @@ HLT
 
 : TWO_ROOTS
     PUSH -1
-    PUSHR BX
+    PUSH BX
     MUL
-    PUSHR DX
+    PUSH DX
     SQRT
     ADD
     PUSH 2
-    PUSHR AX
+    PUSH AX
     MUL
     DIV
     OUT
 
     PUSH -1
-    PUSHR BX
+    PUSH BX
     MUL
-    PUSHR DX
+    PUSH DX
     SQRT
     SUB
     PUSH 2
-    PUSHR AX
+    PUSH AX
     MUL
     DIV
     OUT
@@ -81,20 +81,20 @@ HLT
     HLT
 
 : SOLVE_LINEAR
-    PUSHR BX
+    PUSH BX
     PUSH 0
     JE : SOLVE_SIMPLE   ; if (b == 0) -> simple equation
 
-    PUSHR CX            ; else        -> classic linear equation
+    PUSH CX            ; else        -> classic linear equation
     PUSH -1
     MUL
-    PUSHR BX
+    PUSH BX
     DIV
     OUT                 ; out(-c / b)
     HLT
 
 : SOLVE_SIMPLE
-    PUSHR CX
+    PUSH CX
     PUSH 0
     JE : INF_ROOTS       ; if (c == 0) -> infinite roots
 
@@ -108,3 +108,4 @@ HLT
 : NO_ROOTS
     MSG 1
     HLT
+

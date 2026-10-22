@@ -21,7 +21,7 @@ ON_LOG(ENDLOG())
 void Assembler( asm_t* asm_data )
 {
 
-    char command_name[10] = {};
+    char command_name[20] = {};
     stack_el_t command_arg = 0;
     int sscanf_rv = 0;
 
@@ -45,45 +45,11 @@ void Assembler( asm_t* asm_data )
                 {
                     if (strcmp(command_name, "PUSH") == 0)
                     {
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSH;
-                        sscanf(asm_data->array_of_lines[i], "%*s" OUTPUT_SPECIFIER, &command_arg);
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
-                    }
-                    else if (strcmp(command_name, "PUSHMR") == 0)
-                    {
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSHMR;
-                        sscanf(asm_data->array_of_lines[i], "%*s [%[ABCDX]", command_name);
-                        SwitchRegister(asm_data, command_name);
-                    }
-                    else if (strcmp(command_name, "POPMR") == 0)
-                    {
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = POPMR;
-                        sscanf(asm_data->array_of_lines[i], "%*s [%[ABCDX]", command_name);
-                        SwitchRegister(asm_data, command_name);
-                    }
-                    else if (strcmp(command_name, "PUSHR") == 0)
-                    {
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSHR;
-                        sscanf(asm_data->array_of_lines[i], "%*s %s", command_name);
-                        SwitchRegister(asm_data, command_name);
-                    }
-                    else if (strcmp(command_name, "PUSHM") == 0)
-                    {
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSHM;
-                        sscanf(asm_data->array_of_lines[i], "%*s [" OUTPUT_SPECIFIER "]", &command_arg);
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
-                    }
-                    else if (strcmp(command_name, "POPM") == 0)
-                    {
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = POPM;
-                        sscanf(asm_data->array_of_lines[i], "%*s [" OUTPUT_SPECIFIER "]", &command_arg);
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
+                        ParsingPushArg(asm_data->array_of_lines[i], asm_data);
                     }
                     else if (strcmp(command_name, "POP") == 0)
                     {
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = POP;
-                        sscanf(asm_data->array_of_lines[i], "%*s %s", command_name);
-                        SwitchRegister(asm_data, command_name);
+                        ParsingPopArg(asm_data->array_of_lines[i], asm_data);
                     }
                     break;
                 }
@@ -134,9 +100,8 @@ void Assembler( asm_t* asm_data )
 
                     }
                     else if (strcmp(command_name, "MUL") == 0)
-                    {
                         asm_data->bytecode.code_array[asm_data->bytecode.size++] = MUL;
-                    }
+
                     break;
                 }
                 case 'R':
@@ -218,6 +183,110 @@ void Assembler( asm_t* asm_data )
         }
     }
 }
+
+void ParsingPushArg( const char* push_arg, asm_t* asm_data )
+{
+ON_LOG(LOG("ParsingPushArg(): push_arg: %s", push_arg))
+
+    stack_el_t command_arg = 0;
+    char command_arg_str[10] = {};
+    if ((sscanf(push_arg, "%*s [%[A-D]X + " OUTPUT_SPECIFIER "]", command_arg_str, &command_arg) == 2) ||
+        (sscanf(push_arg, "%*s [" OUTPUT_SPECIFIER " + %[A-D]X]", &command_arg, command_arg_str) == 2))
+    {
+        int reg_num_mask = (command_arg_str[0] - 'A') << 8;
+ON_LOG(LOG("ParsingPushArg(): reg_num_mask: 0x%X", reg_num_mask))
+ON_LOG(LOG("ParsingPushArg(): command_arg: [" OUTPUT_SPECIFIER "]", command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSH | RAM_MASK | REG_MASK | CNST_MASK | reg_num_mask;
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
+    }
+    else if ((sscanf(push_arg, "%*s %[A-D]X + " OUTPUT_SPECIFIER, command_arg_str, &command_arg) == 2) ||
+        (sscanf(push_arg, "%*s" OUTPUT_SPECIFIER " + %[A-D]X", &command_arg, command_arg_str) == 2))
+    {
+        int reg_num_mask = (command_arg_str[0] - 'A') << 8;
+ON_LOG(LOG("ParsingPushArg(): reg_num_mask: 0x%X", reg_num_mask))
+ON_LOG(LOG("ParsingPushArg(): command_arg: [" OUTPUT_SPECIFIER "]", command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSH | REG_MASK | CNST_MASK | reg_num_mask;
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
+        return;
+    }
+    else if (sscanf(push_arg, "%*s [%[A-D]X]", command_arg_str) == 1)
+    {
+        int reg_num_mask = (command_arg_str[0] - 'A') << 8;
+ON_LOG(LOG("ParsingPushArg(): reg_num_mask: 0x%X", reg_num_mask))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSH | RAM_MASK | REG_MASK | reg_num_mask;
+        return;
+    }
+    else if (sscanf(push_arg, "%*s [" OUTPUT_SPECIFIER "]", &command_arg) == 1)
+    {
+ON_LOG(LOG("ParsingPushArg(): command_arg: [" OUTPUT_SPECIFIER "]", command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSH | RAM_MASK | CNST_MASK;
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
+        return;
+    }
+    else if (sscanf(push_arg, "%*s %[A-D]X", command_arg_str) == 1)
+    {
+        int reg_num_mask = (command_arg_str[0] - 'A') << 8;
+ON_LOG(LOG("ParsingPushArg(): reg_num_mask: 0x%X", reg_num_mask))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSH | REG_MASK | reg_num_mask;
+        return;
+    }
+    else if (sscanf(push_arg, "%*s" OUTPUT_SPECIFIER, &command_arg) == 1)
+    {
+ON_LOG(LOG("ParsingPushArg(): command_arg:" OUTPUT_SPECIFIER, command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = PUSH | CNST_MASK;
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
+        return;
+    }
+    else
+    {
+        ON_LOG(LOG("ParsingPushArg(): INCORRECT_ARG"))
+        return;
+    }
+}
+
+void ParsingPopArg( const char* pop_arg, asm_t* asm_data )
+{
+ON_LOG(LOG("ParsingPopArg(): pop_arg: %s", pop_arg))
+
+    stack_el_t command_arg = 0;
+    char command_arg_str[10] = {};
+    if ((sscanf(pop_arg, "%*s [%[A-D]X + " OUTPUT_SPECIFIER "]", command_arg_str, &command_arg) == 2) ||
+        (sscanf(pop_arg, "%*s [" OUTPUT_SPECIFIER " + %[A-D]X]", &command_arg, command_arg_str) == 2))
+    {
+        int reg_num_mask = (command_arg_str[0] - 'A') << 8;
+ON_LOG(LOG("ParsingPopArg(): reg_num_mask: 0x%X", reg_num_mask))
+ON_LOG(LOG("ParsingPopArg(): command_arg: [" OUTPUT_SPECIFIER "]", command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = POP | RAM_MASK | REG_MASK | CNST_MASK | reg_num_mask;
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
+    }
+    else if (sscanf(pop_arg, "%*s [%[A-D]X]", command_arg_str) == 1)
+    {
+        int reg_num_mask = (command_arg_str[0] - 'A') << 8;
+ON_LOG(LOG("ParsingPopArg(): reg_num_mask: 0x%X", reg_num_mask))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = POP | RAM_MASK | REG_MASK | reg_num_mask;
+        return;
+    }
+    else if (sscanf(pop_arg, "%*s [" OUTPUT_SPECIFIER "]", &command_arg) == 1)
+    {
+ON_LOG(LOG("ParsingPopArg(): command_arg: [" OUTPUT_SPECIFIER "]", command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = POP | RAM_MASK | CNST_MASK;
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = command_arg;
+        return;
+    }
+    else if (sscanf(pop_arg, "%*s %[A-D]X", command_arg_str) == 1)
+    {
+        int reg_num_mask = (command_arg_str[0] - 'A') << 8;
+ON_LOG(LOG("ParsingPopArg(): reg_num_mask: 0x%X", reg_num_mask))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = POP | REG_MASK | reg_num_mask;
+        return;
+    }
+    else
+    {
+        ON_LOG(LOG("ParsingPushArg(): INCORRECT_ARG"))
+        return;
+    }
+}
+
 
 void PreAssembling( int argc, char** argv, asm_t* asm_data )
 {
