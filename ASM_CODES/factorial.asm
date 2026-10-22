@@ -1,0 +1,22 @@
+IN
+POP AX
+CALL : FACTORIAL
+OUT
+HLT
+
+: FACTORIAL
+    PUSH AX
+    PUSH 1
+    JNE : NOT_ONE
+    PUSH 1
+    RET
+
+: NOT_ONE
+    PUSH AX
+    PUSH AX
+    PUSH 1
+    SUB
+    POP AX
+    CALL : FACTORIAL
+    MUL
+    RET

@@ -127,14 +127,17 @@ ON_LOG(LOG("Div {" OUTPUT_SPECIFIER "} with {" OUTPUT_SPECIFIER "}, result: {" O
 
 void draw( spu_t* spu )
 {
-    for (size_t i = 0; i < (size_t)sqrt(RAM_SIZE); i++)
+    for (size_t i = 0; i < (size_t)sqrt(VRAM_SIZE); i++)
     {
-        for (size_t j = 0; j < (size_t)sqrt(RAM_SIZE); j++)
+        for (size_t j = 0; j < (size_t)sqrt(VRAM_SIZE); j++)
         {
-            if (CompareDoubles(spu->RAM[i * (size_t)sqrt(RAM_SIZE) + j], 0))
+            //printf("[" OUTPUT_SPECIFIER "]", spu->RAM[i * (size_t)sqrt(RAM_SIZE) + j]);
+
+            if (CompareDoubles(spu->RAM[i * (size_t)sqrt(VRAM_SIZE) + j], 0) == EQUAL)
                 printf("[.]");
             else
                 printf("[*]");
+
         }
         printf("\n");
     }

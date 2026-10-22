@@ -292,7 +292,7 @@ void PreAssembling( int argc, char** argv, asm_t* asm_data )
 {
     FileInfo file = {};
 
-    if (argc > 1 && strcmp(argv[1], "../") != 0)
+    if (argc > 1 && strcmp(argv[1], "../ASM_CODES/") != 0)
         PrepareFileForSorting(argv[1], &file);
     else
     {

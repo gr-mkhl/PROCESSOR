@@ -11,7 +11,8 @@
 #include "../log.h"
 #define DEFAULT_INPUT_FILENAME "../a.o"
 #define INIT_SIZE 10
-#define RAM_SIZE 256
+#define RAM_SIZE 10000
+#define VRAM_SIZE 3600
 struct spu_t
 {
     stack_t stack;
