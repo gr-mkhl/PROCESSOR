@@ -1,7 +1,6 @@
 #ifndef _LOG_H_
 #define _LOG_H_
 
-#define LOGGING
 #include <stdio.h>
 #include <time.h>
 
@@ -22,8 +21,8 @@ void EndLog( const char* filename, const char* func, int line );
 
 #define LOG(...) do                                                      \
 {                                                                        \
-    fprintf(LOG_FILE, "%s: <", FillTime());                              \
+    fprintf(LOG_FILE, "%s: %s(): <", FillTime(), __func__);              \
     fprintf(LOG_FILE, __VA_ARGS__);                                      \
-    fprintf(LOG_FILE, "> in %s:%s:%d\n", __FILE__, __func__, __LINE__);  \
+    fprintf(LOG_FILE, "> in %s:%d\n", __FILE__, __LINE__);               \
 } while (0);
 #endif

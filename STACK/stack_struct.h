@@ -1,11 +1,9 @@
 #ifndef _STACK_STRUCT_H_
 #define _STACK_STRUCT_H_
 
-
 //#define STACK_DEBUG
 //#define CANARY_DEFENSE
 //#define HASH_DEFENSE
-
 
 #ifdef __win32__
     #define WINDOWS_SYS
@@ -87,7 +85,6 @@ struct stack_t
 
     CANARY_ON(unsigned long long right_stack_canary;)
 };
-
 
 #ifdef CANARY_DEFENSE
 const unsigned long long LEFT_STACK_CANARY_CORRECT_VALUE = 0xDEADBEEF;

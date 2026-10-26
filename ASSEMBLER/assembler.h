@@ -14,39 +14,42 @@
 
 #define DEFAULT_OUTPUT_FILENAME "../a.o"
 
-#define NUM_OF_LABELS 20
-
-struct bytecode_t
-{
-    stack_el_t* code_array;
-    size_t size;
-};
+#define MAX_NUM_OF_LABELS 20
 
 struct label_t
 {
-    char label_name[50];
+    uint64_t label_hash;
     int label_address;
 };
+struct bytecode_t
+{
+    uint8_t* code_array;
+    size_t size;
+};
+
 
 struct asm_t
 {
     bytecode_t bytecode;
     label_t* labels;
+    size_t num_of_labels;
     char** array_of_lines;
     char* buffer_ptr;
     size_t num_of_lines;
-    bool need_twice_asm;
+    bool second_asm;
 };
 
 void PreAssembling( int argc, char** argv, asm_t* asm_data );
-void Assembler(asm_t* asm_data);
+bool Assembler(asm_t* asm_data);
 void DoAssembling( asm_t* asm_data );
 void PostAssembling( int argc, char** argv, asm_t* asm_data );
-int FindLabel( const char* name, label_t* labels_arr );
-int SetLabel( const char* name, int address, label_t* labels_arr );
-void SwitchRegister( asm_t* asm_data, const char* name );
+int FindLabel( const char* name, label_t* labels_arr, size_t num_of_labels );
+int SetLabel( const char* name, int address, label_t* labels_arr, size_t* num_of_labels );
 
-void ParsingPushArg( const char* command_arg_str, asm_t* asm_data );
-void ParsingPopArg( const char* pop_arg, asm_t* asm_data );
+void ParsingArg( const char* command_arg_str, commands comm, asm_t* asm_data);
+
+
+uint64_t Hash_djb2( const void* beg, size_t len );
+int CompareLabelsHashUp( const void* first, const void* second );
 
 #endif

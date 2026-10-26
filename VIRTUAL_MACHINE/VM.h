@@ -18,13 +18,13 @@ struct spu_t
     stack_t stack;
     stack_t ret_stack;
 
-    stack_el_t* code;
+    uint8_t* code;
     size_t ip;
 
     stack_el_t* RAM;
 
     size_t num_of_instructions;
-    stack_el_t reg[4];
+    stack_el_t reg[8];
 
     stack_el_t value[2];
 };
@@ -33,6 +33,7 @@ struct spu_t
 void SPUCtor( spu_t* spu, const char* input_filename );
 void SPUDtor( spu_t* spu );
 const char* SetFileName( int argc, char** argv );
+//void CodeDump( spu_t* spu );
 
 typedef void (*command_f)(spu_t*);
 

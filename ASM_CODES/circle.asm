@@ -1,4 +1,4 @@
-; радиус круга будет в DX, центр круга - пиксель [30][30] (нумерация с нуля)
+; радиус круга будет в DX, центр круга - пиксель [300][300] (нумерация с нуля)
 
 IN
 POP DX
@@ -16,7 +16,7 @@ HLT
 
 : BEG_SC
     PUSH AX
-    PUSH 60
+    PUSH 600
     JB : SC
     RET
 
@@ -32,7 +32,7 @@ HLT
 
 : BEG_FC
     PUSH BX
-    PUSH 60
+    PUSH 600
     JB : FC
     RET
 
@@ -47,17 +47,17 @@ HLT
 
 : IF_CIRCLE
     PUSH BX
-    PUSH 30
+    PUSH 300
     SUB
     PUSH BX
-    PUSH 30
+    PUSH 300
     SUB
     MUL
     PUSH AX
-    PUSH 30
+    PUSH 300
     SUB
     PUSH AX
-    PUSH 30
+    PUSH 300
     SUB
     MUL
     ADD
@@ -68,7 +68,7 @@ HLT
 
 : YES
     PUSH AX
-    PUSH 60
+    PUSH 600
     MUL
     PUSH BX
     ADD

@@ -11,11 +11,6 @@
 
 
 #ifdef CANARY_DEFENSE
-const unsigned long long LEFT_STACK_CANARY_CORRECT_VALUE = 0xDEADBEEF;
-const unsigned long long RIGHT_STACK_CANARY_CORRECT_VALUE = 0xFEEDDED;
-const stack_el_t LEFT_BUFFER_CANARY_CORRECT_VALUE= 0xEDADEDA;
-const stack_el_t RIGHT_BUFFER_CANARY_CORRECT_VALUE= 0xBEDADEDA;
-
 void InitCanaries( stack_t* stk );
 bool AreCanariesDead( const stack_t* stk );
 #endif
