@@ -36,8 +36,8 @@
 #endif
 
 
-typedef double stack_el_t;
-#define OUTPUT_SPECIFIER "%lg"
+typedef int stack_el_t;
+#define OUTPUT_SPECIFIER "%d"
 #define POISON -67
 
 
@@ -92,16 +92,5 @@ const unsigned long long RIGHT_STACK_CANARY_CORRECT_VALUE = 0xFEEDDED;
 const stack_el_t LEFT_BUFFER_CANARY_CORRECT_VALUE= 0xEDADEDA;
 const stack_el_t RIGHT_BUFFER_CANARY_CORRECT_VALUE= 0xBEDADEDA;
 #endif
-
-//AreEqual() с подавлением warning-ов
-/*
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-inline bool AreEqual( const double a, const double b )
-{
-    return a == b;
-}
-#pragma GCC diagnostic pop
-*/
 
 #endif

@@ -1,5 +1,6 @@
-#define LOGGING
+//#define LOGGING
 #include "VM.h"
+#include "raylib.h"
 
 
 int main( int argc, char** argv )
@@ -13,12 +14,15 @@ ON_LOG(STARTLOG())
 
     spu_t spu = {};
     SPUCtor(&spu, code_filename);
-
+    //draw(&spu);
     while (spu.ip < spu.num_of_instructions)
     {
+        //getchar();
+        //RegDump(&spu);
         if (spu.code[spu.ip] == HLT)
         {
 ON_LOG(LOG("Find HLT on ip: %zu", spu.ip))
+            //RAMDump(&spu);
             hlt(&spu);
 ON_LOG(ENDLOG())
             return 0;
@@ -136,9 +140,35 @@ ON_LOG(LOG("Div {" OUTPUT_SPECIFIER "} with {" OUTPUT_SPECIFIER "}, result: {" O
 }
 
 
+
 void draw( spu_t* spu )
 {
-    spu = spu;
+    SetTraceLogLevel(LOG_WARNING);
+    InitWindow(WIDTH, HEIGHT, "draw");
+
+    Image MyImage = GenImageColor(WIDTH, HEIGHT, WHITE);
+    MyImage.data = (Color*)spu->RAM;
+
+    // for (size_t y = 0; y < HEIGHT; y++)
+    //     for (size_t x = 0; x < WIDTH; x++)
+    //         memcpy(&pixels[y * WIDTH + x], &spu->RAM[y * WIDTH + x], sizeof(stack_el_t));
+    //memcpy(pixels, spu->RAM, VRAM_SIZE * sizeof(stack_el_t));
+
+    Texture MyTexture = LoadTextureFromImage(MyImage);
+
+    UnloadImage(MyImage);
+
+    while (!WindowShouldClose())
+    {
+        BeginDrawing();
+        ClearBackground(WHITE);
+        DrawTexture(MyTexture, 0, 0, WHITE);
+        EndDrawing();
+    }
+
+    UnloadTexture(MyTexture);
+    CloseWindow();
+
 ON_LOG(LOG("Drew RAM"))
 }
 
@@ -358,3 +388,22 @@ void CodeDump( spu_t* spu ) //аххаххаха это позор
     putchar('\n');
 }
 */
+
+void RAMDump( spu_t* spu )
+{
+    for (size_t i = 0; i < VRAM_SIZE; i++)
+    {
+        printf("[%zu]:", i);
+        uint8_t* ptr = (uint8_t*)&spu->RAM[i];
+        for (size_t j = 0; j < sizeof(stack_el_t); j++)
+            printf("%3X", *(ptr + j));
+        putchar('\n');
+    }
+}
+
+void RegDump( spu_t* spu )
+{
+    for (size_t i = 0; i < 8; i++)
+        printf("%cX = " OUTPUT_SPECIFIER "\n", (int)('A' + i), spu->reg[i]);
+    printf("\n\n\n");
+}

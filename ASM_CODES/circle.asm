@@ -1,4 +1,11 @@
-; радиус круга будет в DX, центр круга - пиксель [300][300] (нумерация с нуля)
+$CENTER_X 400
+$CENTER_Y 300
+$WIDTH 800
+$HEIGHT 600
+$RED -16776961
+; RED = FF 00 00 FF in (int)
+
+
 
 IN
 POP DX
@@ -11,69 +18,70 @@ HLT
     POP AX
     PUSH 0
     POP BX
-    CALL : BEG_SC
+    CALL : BEG_Y_CYCLE
     RET
 
-: BEG_SC
+: BEG_Y_CYCLE
     PUSH AX
-    PUSH 600
-    JB : SC
+    PUSH $HEIGHT
+    JB : Y_CYCLE
     RET
 
-: SC
-    CALL : BEG_FC
+: Y_CYCLE
+    CALL : BEG_X_CYCLE
     PUSH 0
     POP BX
-    PUSH AX
     PUSH 1
+    PUSH AX
     ADD
     POP AX
-    JMP : BEG_SC
+    JMP : BEG_Y_CYCLE
 
-: BEG_FC
+: BEG_X_CYCLE
     PUSH BX
-    PUSH 600
-    JB : FC
+    PUSH $WIDTH
+    JB : X_CYCLE
     RET
 
-: FC
+: X_CYCLE
     CALL : IF_CIRCLE
     PUSH BX
     PUSH 1
     ADD
     POP BX
-    JMP : BEG_FC
+    JMP : BEG_X_CYCLE
 
 
 : IF_CIRCLE
     PUSH BX
-    PUSH 300
+    PUSH $CENTER_X
     SUB
     PUSH BX
-    PUSH 300
+    PUSH $CENTER_X
     SUB
     MUL
     PUSH AX
-    PUSH 300
+    PUSH $CENTER_Y
     SUB
     PUSH AX
-    PUSH 300
+    PUSH $CENTER_Y
     SUB
     MUL
     ADD
-    SQRT
     PUSH DX
+    PUSH DX
+    MUL
     JBE : YES
     RET
 
 : YES
     PUSH AX
-    PUSH 600
+    PUSH $WIDTH
     MUL
     PUSH BX
     ADD
     POP CX
-    PUSH 67
+    PUSH $RED
     POP [CX]
     RET
 

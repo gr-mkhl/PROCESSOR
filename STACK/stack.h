@@ -6,12 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define RED      "\033[31m"
-#define YELLOW   "\033[33m"
-#define BLUE     "\033[34m"
-#define RET_COL  "\033[0m"
-
-
 
 error_id StackInitF( stack_t* stk, size_t capacity
            ON_DEBUG(, const char* file, const char* func, int line) );

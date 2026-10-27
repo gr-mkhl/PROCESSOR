@@ -11,8 +11,11 @@
 #include "../log.h"
 #define DEFAULT_INPUT_FILENAME "../a.o"
 #define INIT_SIZE 10
-#define RAM_SIZE 10000
-#define VRAM_SIZE 3600
+#define RAM_SIZE 1000000
+
+#define WIDTH 800
+#define HEIGHT 600
+#define VRAM_SIZE WIDTH * HEIGHT
 struct spu_t
 {
     stack_t stack;
@@ -34,7 +37,8 @@ void SPUCtor( spu_t* spu, const char* input_filename );
 void SPUDtor( spu_t* spu );
 const char* SetFileName( int argc, char** argv );
 //void CodeDump( spu_t* spu );
-
+void RAMDump( spu_t* spu );
+void RegDump( spu_t* spu );
 typedef void (*command_f)(spu_t*);
 
 void hlt( spu_t* spu );

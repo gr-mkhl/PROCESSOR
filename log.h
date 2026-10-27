@@ -21,6 +21,8 @@ void EndLog( const char* filename, const char* func, int line );
 
 #define LOG(...) do                                                      \
 {                                                                        \
+    fclose(LOG_FILE);                                                    \
+    LOG_FILE = fopen(LOG_FILENAME, "a");                                 \
     fprintf(LOG_FILE, "%s: %s(): <", FillTime(), __func__);              \
     fprintf(LOG_FILE, __VA_ARGS__);                                      \
     fprintf(LOG_FILE, "> in %s:%d\n", __FILE__, __LINE__);               \
