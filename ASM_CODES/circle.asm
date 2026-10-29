@@ -2,8 +2,7 @@ $CENTER_X 400
 $CENTER_Y 300
 $WIDTH 800
 $HEIGHT 600
-$RED -16776961
-; RED = FF 00 00 FF in (int)
+
 
 
 
@@ -81,7 +80,18 @@ HLT
     PUSH BX
     ADD
     POP CX
-    PUSH $RED
+
+    PUSH AX
+    PUSH 256
+    MUL
+    PUSH BX
+    ADD
+    PUSH 256
+    MUL
+    PUSH 256
+    MUL
+    PUSH 255
+    ADD
     POP [CX]
     RET
 

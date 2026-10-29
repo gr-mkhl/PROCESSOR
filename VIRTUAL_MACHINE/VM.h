@@ -9,6 +9,14 @@
 #include "../STACK/stack.h"
 #include "../commands.h"
 #include "../log.h"
+
+const file_header VM_header =
+{
+    .SIGN = {'M', 'K', 'H', 'L'},
+    .major = 1,
+    .minor = 0
+};
+
 #define DEFAULT_INPUT_FILENAME "../a.o"
 #define INIT_SIZE 10
 #define RAM_SIZE 1000000
@@ -16,6 +24,11 @@
 #define WIDTH 800
 #define HEIGHT 600
 #define VRAM_SIZE WIDTH * HEIGHT
+
+typedef stack_el_t ram_t;
+
+#define NUM_OF_RX 8
+
 struct spu_t
 {
     stack_t stack;
@@ -24,21 +37,18 @@ struct spu_t
     uint8_t* code;
     size_t ip;
 
-    stack_el_t* RAM;
+    ram_t* RAM;
 
     size_t num_of_instructions;
-    stack_el_t reg[8];
+    stack_el_t reg[NUM_OF_RX];
 
     stack_el_t value[2];
 };
 
-
+void CheckHead( file_header* head, uint8_t* code_array, size_t code_size );
 void SPUCtor( spu_t* spu, const char* input_filename );
 void SPUDtor( spu_t* spu );
 const char* SetFileName( int argc, char** argv );
-//void CodeDump( spu_t* spu );
-void RAMDump( spu_t* spu );
-void RegDump( spu_t* spu );
 typedef void (*command_f)(spu_t*);
 
 void hlt( spu_t* spu );
@@ -66,7 +76,8 @@ void msg( spu_t* spu );
 #define EPS 1E-8
 enum SIGNS {UNDEF = -67, LESS = -1, EQUAL = 0, MORE = 1};
 int CompareDoubles( const double a, const double b );
+uint64_t Hash_djb2( const void* beg, size_t len );
 
-
+#include "VM_dump.c"
 
 #endif

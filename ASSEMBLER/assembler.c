@@ -3,23 +3,23 @@
 
 int main( int argc, char** argv )
 {
-ON_LOG(STARTLOG())
+    ON_LOG(STARTLOG())
     asm_t AsmData = {};
 
     PreAssembling(argc, argv, &AsmData);
 
-    Preprocessing(&AsmData);
+    PreProcessing(&AsmData);
     DoAssembling(&AsmData);
 
     PostAssembling(argc, argv, &AsmData);
-ON_LOG(ENDLOG())
+    ON_LOG(ENDLOG())
     return 0;
 }
 
 bool Assembler( asm_t* asm_data )
 {
     char command_name[20] = {};
-    stack_el_t command_arg = 0;
+    command_arg_t command_arg = 0;
     bool need_second_asm = false;
 
     for (size_t i = 0; i < asm_data->num_of_lines; i++)
@@ -39,7 +39,7 @@ bool Assembler( asm_t* asm_data )
                     if (asm_data->second_asm == false)
                     {
                         sscanf(asm_data->array_of_lines[i], "%*s %s", command_name);
-                        SetLabel(command_name, (int)asm_data->bytecode.size, asm_data->labels, &asm_data->num_of_labels);
+                        SetLabel(command_name, (int)asm_data->bytecode.size, asm_data);
                     }
                     break;
                 }
@@ -47,12 +47,12 @@ bool Assembler( asm_t* asm_data )
                 {
                     if (strcmp(command_name, "PUSH") == 0)
                     {
-ON_LOG(LOG("Push:"))
+                        ON_LOG(LOG("Push:"))
                         ParsingArg(asm_data->array_of_lines[i], PUSH, asm_data);
                     }
                     else if (strcmp(command_name, "POP") == 0)
                     {
-ON_LOG(LOG("Pop:"))
+                        ON_LOG(LOG("Pop:"))
                         ParsingArg(asm_data->array_of_lines[i], POP, asm_data);
                     }
                     break;
@@ -61,7 +61,7 @@ ON_LOG(LOG("Pop:"))
                 {
                     if (strcmp(command_name, "CALL") == 0)
                     {
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)CALL;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)CALL;
                         int ret_value = ParsingLabelArg(asm_data->array_of_lines[i], asm_data);
                         if (ret_value == 0)
                             need_second_asm = true;
@@ -77,77 +77,77 @@ ON_LOG(LOG("Pop:"))
                 {
                     if (strcmp(command_name, "MSG") == 0)
                     {
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)MSG;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)MSG;
                         sscanf(asm_data->array_of_lines[i], "%*s" OUTPUT_SPECIFIER, &command_arg);
-                        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(stack_el_t));
-                        asm_data->bytecode.size += sizeof(stack_el_t);
+                        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(command_arg_t));
+                        asm_data->bytecode.size += sizeof(command_arg_t);
                     }
                     else if (strcmp(command_name, "MUL") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)MUL;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)MUL;
                     break;
                 }
                 case 'O':
                 {
                     if (strcmp(command_name,  "OUT") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)OUT;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)OUT;
                     break;
                 }
                 case 'A':
                 {
                     if (strcmp(command_name,  "ADD") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)ADD;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)ADD;
                     break;
                 }
                 case 'R':
                 {
                     if (strcmp(command_name,  "RET") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)RET;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)RET;
                     break;
                 }
                 case 'D':
                 {
                     if (strcmp(command_name, "DIV") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)DIV;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)DIV;
                     else if (strcmp(command_name, "DRAW") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)DRAW;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)DRAW;
                     break;
                 }
                 case 'S':
                 {
                     if (strcmp(command_name, "SUB") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)SUB;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)SUB;
                     else if (strcmp(command_name, "SQRT") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)SQRT;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)SQRT;
                     break;
                 }
                 case 'H':
                 {
                     if (strcmp(command_name,  "HLT") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)HLT;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)HLT;
                     break;
                 }
                 case 'I':
                 {
                     if (strcmp(command_name,  "IN") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)IN;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)IN;
                     break;
                 }
                 case 'J':
                 {
                     if (strcmp(command_name,  "JMP") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)JMP;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)JMP;
                     else if (strcmp(command_name,  "JA") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)JA;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)JA;
                     else if (strcmp(command_name,  "JAE") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)JAE;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)JAE;
                     else if (strcmp(command_name,  "JB") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)JB;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)JB;
                     else if (strcmp(command_name,  "JBE") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)JBE;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)JBE;
                     else if (strcmp(command_name,  "JE") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)JE;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)JE;
                     else if (strcmp(command_name,  "JNE") == 0)
-                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)JNE;
+                        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)JNE;
 
                     int ret_value = ParsingLabelArg(asm_data->array_of_lines[i], asm_data);
                     if (ret_value == 0)
@@ -170,29 +170,36 @@ ON_LOG(LOG("Pop:"))
     return need_second_asm;
 }
 
-void Preprocessing( asm_t* asm_data )
+void PreProcessing( asm_t* asm_data )
 {
     for (size_t i = 0; i < asm_data->num_of_lines; i++)
     {
         if (asm_data->array_of_lines[i][0] == '$')
         {
-            if (asm_data->num_of_macros == MAX_NUM_OF_MACROS)
+            if (asm_data->num_of_macros == asm_data->macros_capacity)
             {
-                fprintf(stderr, "PREPROCESSING ERROR: TOO MANY MACROS, YOU CANT SET MORE");
-                exit(1);
+                size_t new_macros_capacity = asm_data->macros_capacity * 2;
+                macro_t* new_macros_arr = (macro_t*)realloc(asm_data->macros, new_macros_capacity);
+                if (new_macros_arr == NULL)
+                {
+                    fprintf(stderr, "ASSEMBLING ERROR: TOO MANY MACROS, YOU CANT SET MORE");
+                    exit(1);
+                }
+                asm_data->macros = new_macros_arr;
+                asm_data->macros_capacity = new_macros_capacity;
             }
-ON_LOG(LOG("Set new macro, line:%zu", i))
+            ON_LOG(LOG("Set new macro, line:%zu", i))
             char new_macro[20] = {};
             sscanf(asm_data->array_of_lines[i], "$%19s", new_macro);
-ON_LOG(LOG("macro_name: %s", new_macro))
+            ON_LOG(LOG("    macro_name: %s", new_macro))
             uint64_t new_macro_hash = Hash_djb2(new_macro, strlen(new_macro));
             asm_data->macros[asm_data->num_of_macros].macro_hash = new_macro_hash;
-ON_LOG(LOG("macro_hash: 0x%llX", new_macro_hash))
+            ON_LOG(LOG("    macro_hash: 0x%llX", new_macro_hash))
             sscanf(asm_data->array_of_lines[i], "%*s %19[^\n]", new_macro);
             char* new_macro_value = (char*)calloc(strlen("COMMAND ") + strlen(new_macro) + 1, sizeof(char));
             strcpy(new_macro_value, "COMMAND ");
             strcat(new_macro_value, new_macro);
-ON_LOG(LOG("macro_value: %s", new_macro_value))
+            ON_LOG(LOG("    macro_value: %s", new_macro_value))
             asm_data->macros[asm_data->num_of_macros++].macro_value = new_macro_value;
         }
     }
@@ -200,7 +207,7 @@ ON_LOG(LOG("macro_value: %s", new_macro_value))
     LOG("Num of macros: %zu", asm_data->num_of_macros);
     LOG("__macros_array before qsort()__");
     for (size_t i = 0; i < asm_data->num_of_macros; i++)
-        LOG("macro[%zu]: value: %s hash: 0x%llX", i, asm_data->macros[i].macro_value, asm_data->macros[i].macro_hash);
+        LOG("   macro[%zu]: value: %s hash: 0x%llX", i, asm_data->macros[i].macro_value, asm_data->macros[i].macro_hash);
     #endif
 
     qsort(asm_data->macros, asm_data->num_of_macros, sizeof(macro_t), CompareMacrosHashUp);
@@ -208,7 +215,7 @@ ON_LOG(LOG("macro_value: %s", new_macro_value))
     #ifdef LOGGING
     LOG("__macros_array after qsort()__");
         for (size_t i = 0; i < asm_data->num_of_macros; i++)
-            LOG("macro[%zu]: value: %s hash: 0x%llX", i, asm_data->macros[i].macro_value, asm_data->macros[i].macro_hash);
+            LOG("   macro[%zu]: value: %s hash: 0x%llX", i, asm_data->macros[i].macro_value, asm_data->macros[i].macro_hash);
     #endif
 
 }
@@ -222,7 +229,7 @@ int ParsingLabelArg( const char* arg, asm_t* asm_data )
 
         sscanf(arg, "%*s %*s %s", command_name);
 
-        int address = FindLabel(command_name, asm_data->labels, asm_data->num_of_labels);
+        int address = FindLabel(command_name, asm_data);
         if (address == -1)
         {
             asm_data->bytecode.size += sizeof(int);
@@ -240,7 +247,7 @@ int ParsingLabelArg( const char* arg, asm_t* asm_data )
 
 char* FindDefinition( char* macro_name, asm_t* asm_data )
 {
-ON_LOG(LOG("macro_name: %s", macro_name))
+    ON_LOG(LOG("macro_name: %s", macro_name))
     uint64_t new_macro_hash = Hash_djb2(macro_name, strlen(macro_name));
 
     macro_t need_to_find = {};
@@ -249,19 +256,19 @@ ON_LOG(LOG("macro_name: %s", macro_name))
     macro_t* result = (macro_t*)bsearch(&need_to_find, asm_data->macros, asm_data->num_of_macros, sizeof(macro_t), CompareMacrosHashUp);
     if (result != NULL)
     {
-ON_LOG(LOG("Find macro: %s, value: %s, hash: 0x%llX", macro_name, result->macro_value, result->macro_hash))
+        ON_LOG(LOG("Find macro: %s, value: %s, hash: 0x%llX", macro_name, result->macro_value, result->macro_hash))
         return result->macro_value;
     }
-ON_LOG(LOG("Didn't find macro: %s", macro_name))
+    ON_LOG(LOG("Didn't find macro: %s", macro_name))
     return NULL;
 }
 
 
 void ParsingArg( char* arg, commands comm, asm_t* asm_data )
 {
-ON_LOG(LOG("arg: %s", arg))
+    ON_LOG(LOG("arg: %s", arg))
 
-    stack_el_t command_arg = 0;
+    command_arg_t command_arg = 0;
     char command_arg_str[10] = {};
 
     if (sscanf(arg, "%*s $%s", command_arg_str) == 1)
@@ -277,55 +284,55 @@ ON_LOG(LOG("arg: %s", arg))
         (sscanf(arg, "%*s [" OUTPUT_SPECIFIER " + %[A-H]X]", &command_arg, command_arg_str) == 2))
     {
         uint8_t reg_num = (uint8_t)(command_arg_str[0] - 'A');
-ON_LOG(LOG("reg_num: 0x%X", reg_num))
-ON_LOG(LOG("const_arg: {" OUTPUT_SPECIFIER "}", command_arg))
-        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)(comm | RAM_MASK | REG_MASK | CNST_MASK);
+        ON_LOG(LOG("reg_num: 0x%X", reg_num))
+        ON_LOG(LOG("const_arg: {" OUTPUT_SPECIFIER "}", command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)(comm | RAM_MASK | REG_MASK | CNST_MASK);
         asm_data->bytecode.code_array[asm_data->bytecode.size++] = reg_num;
-        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(stack_el_t));
-        asm_data->bytecode.size += sizeof(stack_el_t);
+        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(command_arg_t));
+        asm_data->bytecode.size += sizeof(command_arg_t);
     }
     else if (comm == PUSH && ((sscanf(arg, "%*s %[A-H]X + " OUTPUT_SPECIFIER, command_arg_str, &command_arg) == 2) ||
         (sscanf(arg, "%*s" OUTPUT_SPECIFIER " + %[A-H]X", &command_arg, command_arg_str) == 2)))
     {
         uint8_t reg_num = (uint8_t)(command_arg_str[0] - 'A');
-ON_LOG(LOG("reg_num: 0x%X", reg_num))
-ON_LOG(LOG("const_arg: {" OUTPUT_SPECIFIER "}", command_arg))
-        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)(comm | REG_MASK | CNST_MASK);
+        ON_LOG(LOG("reg_num: 0x%X", reg_num))
+        ON_LOG(LOG("const_arg: {" OUTPUT_SPECIFIER "}", command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)(comm | REG_MASK | CNST_MASK);
         asm_data->bytecode.code_array[asm_data->bytecode.size++] = reg_num;
-        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(stack_el_t));
-        asm_data->bytecode.size += sizeof(stack_el_t);
+        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(command_arg_t));
+        asm_data->bytecode.size += sizeof(command_arg_t);
         return;
     }
     else if (sscanf(arg, "%*s [%[A-H]X]", command_arg_str) == 1)
     {
         uint8_t reg_num = (uint8_t)(command_arg_str[0] - 'A');
-ON_LOG(LOG("reg_num: 0x%X", reg_num))
-        asm_data->bytecode.code_array[asm_data->bytecode.size++] = uint8_t(comm | RAM_MASK | REG_MASK);
+        ON_LOG(LOG("reg_num: 0x%X", reg_num))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)(comm | RAM_MASK | REG_MASK);
         asm_data->bytecode.code_array[asm_data->bytecode.size++] = reg_num;
         return;
     }
     else if (sscanf(arg, "%*s [" OUTPUT_SPECIFIER "]", &command_arg) == 1)
     {
-ON_LOG(LOG("const_arg: {" OUTPUT_SPECIFIER "}", command_arg))
-        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)(comm | RAM_MASK | CNST_MASK);
-        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(stack_el_t));
-        asm_data->bytecode.size += sizeof(stack_el_t);
+        ON_LOG(LOG("const_arg: {" OUTPUT_SPECIFIER "}", command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)(comm | RAM_MASK | CNST_MASK);
+        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(command_arg_t));
+        asm_data->bytecode.size += sizeof(command_arg_t);
         return;
     }
     else if (sscanf(arg, "%*s %[A-H]X", command_arg_str) == 1)
     {
         uint8_t reg_num = (uint8_t)(command_arg_str[0] - 'A');
-ON_LOG(LOG("reg_num: 0x%X", reg_num))
-        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)(comm | REG_MASK);
+        ON_LOG(LOG("reg_num: 0x%X", reg_num))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)(comm | REG_MASK);
         asm_data->bytecode.code_array[asm_data->bytecode.size++] = reg_num;
         return;
     }
     else if (comm == PUSH && sscanf(arg, "%*s" OUTPUT_SPECIFIER, &command_arg) == 1)
     {
-ON_LOG(LOG("const_arg: {" OUTPUT_SPECIFIER "}", command_arg))
-        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (uint8_t)(comm | CNST_MASK);
-        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(stack_el_t));
-        asm_data->bytecode.size += sizeof(stack_el_t);
+        ON_LOG(LOG("const_arg: {" OUTPUT_SPECIFIER "}", command_arg))
+        asm_data->bytecode.code_array[asm_data->bytecode.size++] = (command_t)(comm | CNST_MASK);
+        memcpy(&asm_data->bytecode.code_array[asm_data->bytecode.size], &command_arg, sizeof(command_arg_t));
+        asm_data->bytecode.size += sizeof(command_arg_t);
         return;
     }
     else
@@ -347,13 +354,14 @@ void PreAssembling( int argc, char** argv, asm_t* asm_data )
         fprintf(stderr, "ASSEMBLING ERROR: YOU NEED TO INPUT FILENAME\n");
         exit(1);
     }
-
     asm_data->array_of_lines = file.Index;
     asm_data->buffer_ptr = file.Buffer;
     asm_data->num_of_lines = file.NumStrings;
     asm_data->bytecode.code_array = (uint8_t*)calloc(20 * file.NumStrings, sizeof(uint8_t));
-    asm_data->labels = (label_t*)calloc(MAX_NUM_OF_LABELS, sizeof(label_t));
-    asm_data->macros = (macro_t*)calloc(MAX_NUM_OF_MACROS, sizeof(macro_t));
+    asm_data->labels_capacity = INIT_NUM_OF_LABELS;
+    asm_data->labels = (label_t*)calloc(asm_data->labels_capacity, sizeof(label_t));
+    asm_data->macros_capacity = INIT_NUM_OF_MACROS;
+    asm_data->macros = (macro_t*)calloc(asm_data->macros_capacity, sizeof(macro_t));
 }
 
 
@@ -369,6 +377,9 @@ void PostAssembling( int argc, char** argv, asm_t* asm_data )
     FILE* output = fopen(output_filename, "wb");
     assert(output != NULL);
 
+    file_header head = {};
+    SetHeader(asm_data, &head);
+    fwrite(&head, sizeof(file_header), 1, output);
     fwrite(asm_data->bytecode.code_array, sizeof(uint8_t), asm_data->bytecode.size, output);
 
     fclose(output);
@@ -380,34 +391,40 @@ void PostAssembling( int argc, char** argv, asm_t* asm_data )
     free(asm_data->bytecode.code_array);
 }
 
-
+void SetHeader( asm_t* asm_data, file_header* head )
+{
+    memcpy(&head->SIGN, &ASM_header.SIGN, sizeof(char) * 4);
+    head->major = ASM_header.major;
+    head->minor = ASM_header.minor;
+    head->hash = Hash_djb2(asm_data->bytecode.code_array, asm_data->bytecode.size);
+}
 void DoAssembling( asm_t* asm_data )
 {
-
-ON_LOG(LOG("First assembling"))
+    ON_LOG(LOG("First assembling"))
     if (Assembler(asm_data) == true)
     {
         #ifdef LOGGING
         LOG("Num of labels: %zu", asm_data->num_of_labels);
         LOG("__labels_array before qsort()__");
         for (size_t i = 0; i < asm_data->num_of_labels; i++)
-            LOG("label[%zu]: address: %d hash: 0x%llX", i, asm_data->labels[i].label_address, asm_data->labels[i].label_hash);
+            LOG("label[%zu]: address: %d hash: 0x%llX",
+                 i, asm_data->labels[i].label_address, asm_data->labels[i].label_hash);
         #endif
 
         qsort(asm_data->labels, asm_data->num_of_labels, sizeof(label_t), CompareLabelsHashUp);
 
 
+        #ifdef LOGGING
+        LOG("__labels_array after qsort()__");
+        for (size_t i = 0; i < asm_data->num_of_labels; i++)
+            LOG("label[%zu]: address: %d hash: 0x%llX",
+                 i, asm_data->labels[i].label_address, asm_data->labels[i].label_hash);
+        #endif
+        ON_LOG(LOG("Second assembling"))
 
-    #ifdef LOGGING
-    LOG("__labels_array after qsort()__");
-    for (size_t i = 0; i < asm_data->num_of_labels; i++)
-        LOG("label[%zu]: address: %d hash: 0x%llX", i, asm_data->labels[i].label_address, asm_data->labels[i].label_hash);
-    #endif
-ON_LOG(LOG("Second assembling"))
-
-    asm_data->bytecode.size = 0;
-    asm_data->second_asm = true;
-    Assembler(asm_data);
+        asm_data->bytecode.size = 0;
+        asm_data->second_asm = true;
+        Assembler(asm_data);
     }
 }
 
@@ -435,37 +452,43 @@ int CompareMacrosHashUp( const void* first, const void* second )
     return -1;
 }
 
-int FindLabel( const char* name, label_t* labels_arr, size_t num_of_labels )
+
+int FindLabel( const char* name, asm_t* asm_data )
 {
     uint64_t new_label_hash = Hash_djb2(name, strlen(name));
     label_t need_to_find = {};
     need_to_find.label_hash = new_label_hash;
-
-    label_t* result = (label_t*)bsearch(&need_to_find, labels_arr, num_of_labels, sizeof(label_t), CompareLabelsHashUp);
+    label_t* result = (label_t*)bsearch(&need_to_find, asm_data->labels, asm_data->num_of_labels, sizeof(label_t), CompareLabelsHashUp);
     if (result != NULL)
     {
-ON_LOG(LOG("Find label: %s, address:%d hash: %llX", name, result->label_address, result->label_hash))
+        ON_LOG(LOG("Find label: %s, address:%d hash: 0x%llX", name, result->label_address, result->label_hash))
         return result->label_address;
     }
-ON_LOG(LOG("Didn't find label: %s", name))
+    ON_LOG(LOG("Didn't find label: %s", name))
     return -1;
 }
 
 
 
-int SetLabel( const char* name, int address, label_t* labels_arr, size_t* num_of_labels )
+int SetLabel( const char* name, int address, asm_t* asm_data )
 {
-    if (*num_of_labels == MAX_NUM_OF_LABELS)
+    if (asm_data->num_of_labels == asm_data->labels_capacity)
     {
-        fprintf(stderr, "ASSEMBLING ERROR: TOO MANY LABELS, YOU CANT SET MORE");
-        exit(1);
+        size_t new_labels_capacity = asm_data->labels_capacity * 2;
+        label_t* new_labels_arr = (label_t*)realloc(asm_data->labels, new_labels_capacity);
+        if (new_labels_arr == NULL)
+        {
+            fprintf(stderr, "ASSEMBLING ERROR: TOO MANY LABELS, YOU CANT SET MORE");
+            exit(1);
+        }
+        asm_data->labels = new_labels_arr;
+        asm_data->labels_capacity = new_labels_capacity;
     }
-    uint64_t newlabel_hash = Hash_djb2(name, strlen(name));
 
-    labels_arr[*num_of_labels].label_hash = newlabel_hash;
-    labels_arr[*num_of_labels].label_address = address;
-    (*num_of_labels)++;
-ON_LOG(LOG("Set label: %s, address: %d, hash: 0x%llX", name, address, newlabel_hash))
+    uint64_t newlabel_hash = Hash_djb2(name, strlen(name));
+    asm_data->labels[asm_data->num_of_labels].label_hash = newlabel_hash;
+    asm_data->labels[asm_data->num_of_labels++].label_address = address;
+    ON_LOG(LOG("Set label: %s, address: %d, hash: 0x%llX", name, address, newlabel_hash))
     return 1;
 }
 
@@ -474,8 +497,6 @@ uint64_t Hash_djb2( const void* beg, size_t len )
     uint64_t hash = 5381;
 
     for (const uint8_t* i = (const uint8_t*)beg; i <= (const uint8_t*)beg + len; i++)
-    {
         hash =  (hash << 5) + hash + *i;
-    }
     return hash;
 }
