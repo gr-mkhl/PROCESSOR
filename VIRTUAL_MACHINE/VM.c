@@ -1,5 +1,5 @@
-//#define LOGGING
-//#define STEP_BY_STEP
+#define LOGGING
+#define STEP_BY_STEP
 #include "VM.h"
 #include "raylib.h"
 
