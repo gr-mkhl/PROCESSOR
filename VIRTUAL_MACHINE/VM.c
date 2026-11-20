@@ -1,5 +1,5 @@
-#define LOGGING
-#define STEP_BY_STEP
+//#define LOGGING
+//#define STEP_BY_STEP
 #include "VM.h"
 #include "raylib.h"
 
@@ -417,7 +417,7 @@ uint64_t Hash_djb2( const void* beg, size_t len )
 {
     uint64_t hash = 5381;
 
-    for (const uint8_t* i = (const uint8_t*)beg; i <= (const uint8_t*)beg + len; i++)
+    for (const uint8_t* i = (const uint8_t*)beg; i < (const uint8_t*)beg + len; i++)
         hash =  (hash << 5) + hash + *i;
     return hash;
 }

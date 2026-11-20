@@ -10,9 +10,9 @@
 error_id StackInitF( stack_t* stk, size_t capacity
            ON_DEBUG(, const char* file, const char* func, int line) );
 #define StackInit(PTR, SIZE) StackInitF(PTR, SIZE ON_DEBUG(, __FILE__, __func__, __LINE__))
-error_id StackInitByCopyF( stack_t* src, stack_t* dest
+error_id StackInitByCopyF( stack_t* dest, stack_t* src
             ON_DEBUG(, const char* file, const char* func, int line) );
-#define StackInitByCopy(SRC, DEST) StackInitByCopyF(SRC, DEST ON_DEBUG(, __FILE__, __func__, __LINE__))
+#define StackInitByCopy(DEST, SRC) StackInitByCopyF(DEST, SRC ON_DEBUG(, __FILE__, __func__, __LINE__))
 error_id StackPush( stack_t* stk, stack_el_t value );
 error_id StackPop( stack_t* stk, stack_el_t* value );
 error_id StackDtor( stack_t* stk );
